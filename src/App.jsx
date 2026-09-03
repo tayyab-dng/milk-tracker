@@ -17,7 +17,7 @@ const getStatusKey = (userId) => `milk_tracker_${userId}_status`;
 const DEFAULT_SETTINGS = {
   supplierName: 'Supplier',
   defaultRate: 60,
-  currency: '₹',
+  currency: 'PKR',
   defaultQuantity: 1.0,
   quickQuantities: [0.5, 1.0, 1.5, 2.0]
 };
@@ -79,6 +79,11 @@ function MainApp({ userId }) {
         if (parsed.mamuName && !parsed.supplierName) {
           parsed.supplierName = parsed.mamuName;
           delete parsed.mamuName;
+        }
+        // Auto-migrate old default '₹' to 'PKR'
+        if (!parsed.currency || parsed.currency === '₹') {
+          parsed.currency = 'PKR';
+          localStorage.setItem(getSettingsKey(userId), JSON.stringify(parsed));
         }
         setSettings(parsed);
       } else {

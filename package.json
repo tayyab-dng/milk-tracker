@@ -5,11 +5,13 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "expo start --port 8082",
-    "android": "expo start --android --port 8082",
-    "ios": "expo start --ios --port 8082",
-    "web": "expo start --web --port 8082",
-    "dev": "expo start --port 8082",
+    "start": "expo start --port 8085",
+    "android": "expo start --android --port 8085",
+    "ios": "expo start --ios --port 8085",
+    "web": "expo start --web --port 8085",
+    "dev": "expo start --port 8085",
+    "tunnel": "expo start --tunnel",
+    "browser": "vite --port 5173",
     "build": "vite build"
   },
   "dependencies": {

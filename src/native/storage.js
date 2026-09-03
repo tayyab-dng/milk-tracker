@@ -75,7 +75,7 @@ export const SESSION_KEY = 'milk_tracker_session';
 export const DEFAULT_SETTINGS = {
   supplierName: 'Supplier',
   defaultRate: 60,
-  currency: '₹',
+  currency: 'PKR',
   defaultQuantity: 1.0,
   quickQuantities: [0.5, 1.0, 1.5, 2.0]
 };

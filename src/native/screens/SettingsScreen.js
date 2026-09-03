@@ -24,7 +24,7 @@ export default function SettingsScreen({
 
   const [supplierName, setSupplierName] = useState(settings.supplierName || 'Supplier');
   const [defaultRate, setDefaultRate] = useState((settings.defaultRate || 60).toString());
-  const [currency, setCurrency] = useState(settings.currency || '₹');
+  const [currency, setCurrency] = useState(settings.currency || 'PKR');
   const [defaultQuantity, setDefaultQuantity] = useState((settings.defaultQuantity || 1.0).toString());
   const [quickQuantitiesText, setQuickQuantitiesText] = useState(
     (settings.quickQuantities || [0.5, 1.0, 1.5, 2.0]).join(', ')
@@ -35,7 +35,7 @@ export default function SettingsScreen({
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
 
-  const currencies = ['₹', '$', '€', '£', 'Rs.'];
+  const currencies = ['PKR', 'Rs.', '$', '€', '£'];
 
   const handleSaveSettings = () => {
     const rateNum = parseFloat(defaultRate);

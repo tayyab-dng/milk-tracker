@@ -6,7 +6,7 @@ export default function Settings({ settings, onUpdateSettings, onImportData, onR
 
   const [supplierName, setSupplierName] = useState(settings.supplierName || settings.mamuName || 'Supplier');
   const [defaultRate, setDefaultRate] = useState(settings.defaultRate || 60);
-  const [currency, setCurrency] = useState(settings.currency || '₹');
+  const [currency, setCurrency] = useState(settings.currency || 'PKR');
   const [defaultQuantity, setDefaultQuantity] = useState(settings.defaultQuantity || 1.0);
   const [quickQuantitiesText, setQuickQuantitiesText] = useState((settings.quickQuantities || [0.5, 1.0, 1.5, 2.0]).join(', '));
 
@@ -95,7 +95,7 @@ export default function Settings({ settings, onUpdateSettings, onImportData, onR
           showToast("Data restored successfully from backup! 🎉");
           setSupplierName(parsed.settings.supplierName || parsed.settings.mamuName || 'Supplier');
           setDefaultRate(parsed.settings.defaultRate || 60);
-          setCurrency(parsed.settings.currency || '₹');
+          setCurrency(parsed.settings.currency || 'PKR');
           setDefaultQuantity(parsed.settings.defaultQuantity || 1.0);
           setQuickQuantitiesText((parsed.settings.quickQuantities || [0.5, 1.0, 1.5, 2.0]).join(', '));
         } else {
@@ -118,7 +118,7 @@ export default function Settings({ settings, onUpdateSettings, onImportData, onR
     onResetData();
     setSupplierName('Supplier');
     setDefaultRate(60);
-    setCurrency('₹');
+    setCurrency('PKR');
     setDefaultQuantity(1.0);
     setQuickQuantitiesText('0.5, 1.0, 1.5, 2.0');
     setShowResetConfirm(false);
@@ -318,7 +318,30 @@ export default function Settings({ settings, onUpdateSettings, onImportData, onR
               onChange={(e) => setCurrency(e.target.value)}
               required
               maxLength="5"
+              placeholder="e.g. PKR, Rs."
             />
+            <div style={{ display: 'flex', gap: '8px', marginTop: '8px', flexWrap: 'wrap' }}>
+              {['PKR', 'Rs.', '$', '€', '£'].map(c => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => setCurrency(c)}
+                  style={{
+                    padding: '5px 12px',
+                    fontSize: '0.78rem',
+                    fontWeight: '600',
+                    borderRadius: 'var(--radius-full)',
+                    border: currency === c ? '1.5px solid var(--primary)' : '1px solid var(--border)',
+                    background: currency === c ? 'var(--primary-light)' : 'var(--bg-card-alt)',
+                    color: currency === c ? 'var(--primary)' : 'var(--text-muted)',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  {c}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Default Rate */}

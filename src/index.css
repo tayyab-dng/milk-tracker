@@ -112,41 +112,22 @@
 
 body {
   margin: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  padding: 0;
   min-height: 100vh;
-  background: radial-gradient(ellipse at 50% 0%, #1a1040 0%, #080A14 70%);
+  background-color: var(--bg-app);
 }
 
 /* ============================================
-   APP SHELL — Mobile Container
+   APP SHELL — Full Screen Container
    ============================================ */
 #root {
   width: 100%;
-  max-width: 480px;
   height: 100vh;
-  max-height: 880px;
   background-color: var(--bg-app);
-  box-shadow: 0 0 80px rgba(99, 102, 241, 0.15), 0 20px 60px rgba(0, 0, 0, 0.4);
-  border-radius: 44px;
-  border: 3px solid rgba(99, 102, 241, 0.15);
   position: relative;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  transition: all 0.4s var(--ease-out);
-}
-
-@media (max-width: 480px), (max-height: 550px) {
-  #root {
-    max-width: 100%;
-    height: 100vh;
-    max-height: 100vh;
-    border-radius: 0;
-    border: none;
-    box-shadow: none;
-  }
 }
 
 /* ============================================
