@@ -190,6 +190,7 @@ export default function MainApp({ userId }) {
             setCurrentMonth={setCurrentMonth}
             monthlyRates={monthlyRates}
             showToast={showToast}
+            setCurrentTab={setCurrentTab}
           />
         )}
 
