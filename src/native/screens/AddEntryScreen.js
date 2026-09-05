@@ -184,18 +184,8 @@ export default function AddEntryScreen({
       style={styles.keyboardContainer}
     >
       <View style={styles.container}>
-        {/* Top Header Row with Back Button & Centered Screen Title */}
-        <View style={styles.topHeader}>
-          <TouchableOpacity
-            activeOpacity={0.7}
-            style={styles.backBtn}
-            onPress={() => setCurrentTab && setCurrentTab('dashboard')}
-          >
-            <AddIcon type="back" color="#FFFFFF" size={20} />
-          </TouchableOpacity>
-          <Text style={styles.topHeaderTitle}>Add Daily Milk</Text>
-          <View style={{ width: 40 }} />
-        </View>
+        {/* Top Header Area - Preserving Top Spacing as Empty Space */}
+        <View style={styles.topSpacer} />
 
         <ScrollView
           style={styles.scrollView}
@@ -415,32 +405,8 @@ const styles = StyleSheet.create({
       backgroundImage: 'linear-gradient(135deg, #0C0F1A 0%, #1a1040 40%, #0C0F1A 100%)',
     }),
   },
-  topHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingTop: 18,
-    paddingBottom: 14,
-  },
-  backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.06)',
-    borderWidth: 1,
-    borderColor: 'rgba(99, 102, 241, 0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...(Platform.OS === 'web' && {
-      cursor: 'pointer',
-    }),
-  },
-  topHeaderTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#FFFFFF',
-    letterSpacing: -0.3,
+  topSpacer: {
+    height: 60,
   },
   scrollView: {
     flex: 1,
