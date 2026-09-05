@@ -7,9 +7,82 @@ import {
   TextInput,
   StyleSheet,
   Share,
-  Alert
+  Alert,
+  Platform
 } from 'react-native';
 import { colors, typography, spacing, borderRadius } from '../theme';
+import { useAuth } from '../contexts/AuthContext';
+
+// Clean SVG helper for Web
+function Icon({ type, color = 'currentColor', size = 18 }) {
+  if (Platform.OS === 'web') {
+    if (type === 'calendar') {
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+          <line x1="16" y1="2" x2="16" y2="6" />
+          <line x1="8" y1="2" x2="8" y2="6" />
+          <line x1="3" y1="10" x2="21" y2="10" />
+        </svg>
+      );
+    }
+    if (type === 'sun') {
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="5" />
+          <line x1="12" y1="1" x2="12" y2="3" />
+          <line x1="12" y1="21" x2="12" y2="23" />
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+          <line x1="1" y1="12" x2="3" y2="12" />
+          <line x1="21" y1="12" x2="23" y2="12" />
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+        </svg>
+      );
+    }
+    if (type === 'document') {
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+          <polyline points="14 2 14 8 20 8" />
+          <line x1="16" y1="13" x2="8" y2="13" />
+          <line x1="16" y1="17" x2="8" y2="17" />
+        </svg>
+      );
+    }
+    if (type === 'share') {
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+          <polyline points="16 6 12 2 8 6" />
+          <line x1="12" y1="2" x2="12" y2="15" />
+        </svg>
+      );
+    }
+    if (type === 'chart') {
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="18" y1="20" x2="18" y2="10" />
+          <line x1="12" y1="20" x2="12" y2="4" />
+          <line x1="6" y1="20" x2="6" y2="14" />
+        </svg>
+      );
+    }
+    if (type === 'edit') {
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7" />
+          <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+        </svg>
+      );
+    }
+  }
+
+  // Fallback minimalist text
+  const glyphs = { calendar: '📅', sun: '☼', document: '📄', share: '↗', chart: '📊', edit: '✎' };
+  return <Text style={{ color, fontSize: size - 2 }}>{glyphs[type] || '•'}</Text>;
+}
 
 export default function DashboardScreen({
   entries,
@@ -23,8 +96,18 @@ export default function DashboardScreen({
   setCurrentTab,
   showToast
 }) {
+  const { currentUser } = useAuth();
   const [isEditingRate, setIsEditingRate] = useState(false);
   const [tempRate, setTempRate] = useState('');
+
+  const userName = currentUser?.name || settings.userName || 'Tayyab Safdar';
+  const initials = userName
+    .split(' ')
+    .filter(Boolean)
+    .map(n => n[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase() || 'TS';
 
   // Format month name (e.g. 2026-06 -> June 2026)
   const getMonthLabel = (monthStr) => {
@@ -61,15 +144,15 @@ export default function DashboardScreen({
 
   const [yearNum, monNum] = currentMonth.split('-').map(Number);
   const daysInMonth = new Date(yearNum, monNum, 0).getDate();
-  const daysLogged = new Set(filteredEntries.map(e => e.date)).size;
-  const avgDaily = daysLogged > 0 ? (totalKg / daysLogged).toFixed(1) : '0.0';
+  const progressPercent = Math.min((filteredEntries.length / daysInMonth) * 100, 100);
+  const avgDaily = filteredEntries.length > 0 ? (totalKg / filteredEntries.length).toFixed(2) : '0.00';
 
   const handleRateSubmit = () => {
     const r = parseFloat(tempRate);
     if (!isNaN(r) && r >= 0) {
       updateMonthlyRate(currentMonth, r);
       setIsEditingRate(false);
-      showToast(`Rate updated to ${settings.currency}${r}/kg`);
+      showToast(`Rate set to ${settings.currency}${r}/kg for this month.`);
     } else {
       Alert.alert('Invalid Rate', 'Please enter a valid numeric rate.');
     }
@@ -79,41 +162,30 @@ export default function DashboardScreen({
     const monthLabel = getMonthLabel(currentMonth);
     const supplier = settings.supplierName || 'Supplier';
     const message = 
-      `🥛 Milk Delivery Report - ${monthLabel}\n` +
-      `──────────────────────────\n` +
-      `👤 Supplier: ${supplier}\n` +
-      `📦 Total Milk: ${totalKg.toFixed(2)} kg/L\n` +
-      `💵 Rate: ${settings.currency}${rate}/kg\n` +
-      `💰 Total Bill: ${settings.currency}${totalBill.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}\n` +
-      `📌 Status: ${isPaid ? '✅ PAID' : '⏳ UNPAID'}\n` +
-      `──────────────────────────\n` +
+      `*Milk Report - ${monthLabel}*\n` +
+      `----------------------------\n` +
+      `*Supplier:* ${supplier}\n` +
+      `*Total Milk:* ${totalKg.toFixed(2)} kg\n` +
+      `*Rate:* ${settings.currency}${rate}/kg\n` +
+      `*Total Amount:* ${settings.currency}${totalBill.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}\n` +
+      `*Status:* ${isPaid ? 'Paid' : 'Unpaid'}\n` +
+      `----------------------------\n` +
       `Generated via Milk Tracker`;
 
-    try {
-      await Share.share({ message });
-    } catch (error) {
-      console.warn('Share error:', error);
+    if (Platform.OS === 'web' && navigator?.clipboard) {
+      navigator.clipboard.writeText(message).then(() => {
+        showToast('Report copied to clipboard! Ready to share.');
+      }).catch(() => {
+        Share.share({ message }).catch(() => {});
+      });
+    } else {
+      try {
+        await Share.share({ message });
+      } catch (error) {
+        console.warn('Share error:', error);
+      }
     }
   };
-
-  const recentEntries = [...filteredEntries]
-    .sort((a, b) => new Date(b.date) - new Date(a.date))
-    .slice(0, 3);
-
-    const userName = settings.userName || 'Tayyab Safdar';
-    const initials = userName
-      .split(' ')
-      .filter(Boolean)
-      .map(n => n[0])
-      .join('')
-      .slice(0, 2)
-      .toUpperCase() || 'TS';
-
-    const todayLabel = new Date().toLocaleDateString('en-US', {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric'
-    });
 
   return (
     <ScrollView
@@ -121,146 +193,181 @@ export default function DashboardScreen({
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >
-      {/* Curved Hero Header: Profile + Month Selector + Merged Bill Card */}
-      <View style={styles.heroHeaderContainer}>
+      {/* Top Vibrant Hero Card (Matching Vite Aesthetic) */}
+      <View style={styles.heroCard}>
         {/* Profile Row */}
-        <View style={styles.heroProfileRow}>
+        <View style={styles.profileRow}>
           <View>
-            <Text style={styles.heroGreeting}>Welcome back,</Text>
-            <Text style={styles.heroUserName}>{userName}</Text>
+            <Text style={styles.welcomeText}>Welcome back,</Text>
+            <Text style={styles.userNameText}>{userName}</Text>
           </View>
           <TouchableOpacity 
-            style={styles.heroAvatar} 
+            style={styles.avatarCircle} 
             activeOpacity={0.8}
             onPress={() => setCurrentTab && setCurrentTab('settings')}
           >
-            <Text style={styles.heroAvatarText}>{initials}</Text>
-            <View style={styles.heroAvatarDot} />
+            <Text style={styles.avatarInitials}>{initials}</Text>
+            <View style={styles.onlineDot} />
           </TouchableOpacity>
         </View>
 
-        {/* Integrated Month Navigator */}
-        <View style={styles.heroMonthSelector}>
+        {/* Integrated Month Selector */}
+        <View style={styles.monthSelectorBar}>
           <TouchableOpacity
             activeOpacity={0.7}
-            style={styles.heroMonthArrow}
+            style={styles.monthArrowBtn}
             onPress={() => changeMonth(-1)}
           >
-            <Text style={styles.heroArrowText}>◀</Text>
+            <Text style={styles.monthArrowText}>‹</Text>
           </TouchableOpacity>
-          <View style={styles.heroMonthLabelContainer}>
-            <Text style={styles.heroMonthText}>{getMonthLabel(currentMonth)}</Text>
-            <Text style={styles.heroMonthSubtext}>{daysLogged} of {daysInMonth} days logged</Text>
+
+          <View style={styles.monthLabelBox}>
+            <Icon type="calendar" color="#FFFFFF" size={15} />
+            <Text style={styles.monthLabelText}>{getMonthLabel(currentMonth)}</Text>
           </View>
+
           <TouchableOpacity
             activeOpacity={0.7}
-            style={styles.heroMonthArrow}
+            style={styles.monthArrowBtn}
             onPress={() => changeMonth(1)}
           >
-            <Text style={styles.heroArrowText}>▶</Text>
+            <Text style={styles.monthArrowText}>›</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Bill Row & Paid Status */}
-        <View style={styles.heroBillRow}>
+        {/* Estimated Bill & Status Pill */}
+        <View style={styles.billRow}>
           <View>
-            <Text style={styles.heroBillLabel}>ESTIMATED BILL</Text>
-            <Text style={styles.heroBillAmount}>
+            <Text style={styles.billLabel}>ESTIMATED BILL</Text>
+            <Text style={styles.billAmount}>
               {settings.currency}{totalBill.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </Text>
           </View>
+
           <TouchableOpacity
             activeOpacity={0.8}
-            style={[styles.statusBadge, isPaid ? styles.statusPaid : styles.statusUnpaid]}
-            onPress={() => toggleMonthlyStatus(currentMonth)}
+            style={[styles.statusPill, isPaid ? styles.statusPaidPill : styles.statusUnpaidPill]}
+            onPress={() => {
+              toggleMonthlyStatus(currentMonth);
+            }}
           >
-            <Text style={[styles.statusText, isPaid ? styles.statusPaidText : styles.statusUnpaidText]}>
-              {isPaid ? '✓ PAID' : '⏳ UNPAID'}
+            <Text style={styles.statusPillText}>
+              {isPaid ? '✓ Paid' : '✗ Unpaid'}
             </Text>
           </TouchableOpacity>
         </View>
 
-        {/* Stats Row: Total Milk & Rate */}
-        <View style={styles.heroStatsRow}>
-          <View style={styles.heroStatGlass}>
-            <Text style={styles.heroStatLabel}>TOTAL MILK</Text>
-            <Text style={styles.heroStatValue}>{totalKg.toFixed(1)} <Text style={styles.heroStatUnit}>kg</Text></Text>
+        {/* Stats Row: Total Milk & Rate/kg */}
+        <View style={styles.statsRow}>
+          <View style={styles.glassStatBox}>
+            <Text style={styles.statLabel}>TOTAL MILK</Text>
+            <Text style={styles.statValue}>
+              {totalKg.toFixed(1)} <Text style={styles.statUnit}>kg</Text>
+            </Text>
           </View>
+
           <TouchableOpacity 
-            style={styles.heroStatGlass}
+            style={styles.glassStatBox}
             activeOpacity={0.7}
             onPress={() => {
               setTempRate(rate.toString());
               setIsEditingRate(true);
             }}
           >
-            <Text style={styles.heroStatLabel}>RATE / KG</Text>
-            <Text style={styles.heroStatValue}>{settings.currency}{rate} ✎</Text>
+            <Text style={styles.statLabel}>RATE / KG</Text>
+            {isEditingRate ? (
+              <View style={styles.rateEditRow}>
+                <TextInput
+                  style={styles.rateInput}
+                  value={tempRate}
+                  onChangeText={setTempRate}
+                  keyboardType="numeric"
+                  autoFocus
+                  onBlur={handleRateSubmit}
+                  onSubmitEditing={handleRateSubmit}
+                />
+              </View>
+            ) : (
+              <View style={styles.rateDisplayRow}>
+                <Text style={styles.statValue}>{settings.currency}{rate}</Text>
+                <View style={{ marginLeft: 5 }}>
+                  <Icon type="edit" color="rgba(255, 255, 255, 0.7)" size={12} />
+                </View>
+              </View>
+            )}
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* Daily Insight / Monthly Overview Card */}
-      <View style={styles.dailyInsightCard}>
-        <View style={styles.insightHeader}>
-          <Text style={styles.insightTitle}>Monthly Overview</Text>
-          <Text style={styles.insightIcon}>💡</Text>
+      {/* Monthly Overview Card */}
+      <View style={styles.overviewCard}>
+        <View style={styles.overviewHeader}>
+          <Text style={styles.overviewTitle}>Monthly Overview</Text>
+          <Icon type="sun" color="#38BDF8" size={17} />
         </View>
-        <Text style={styles.insightText}>
+        <Text style={styles.overviewText}>
           {filteredEntries.length > 0
             ? `${filteredEntries.length} deliveries logged (${totalKg.toFixed(1)} kg) in ${getMonthLabel(currentMonth)}. Supplier: ${settings.supplierName || 'Supplier'}.`
             : `No deliveries logged yet for ${getMonthLabel(currentMonth)}. Tap "Add Milk" below to start tracking.`}
         </Text>
       </View>
 
-      {/* Quick Action Cards: All Logs & Share Bill */}
-      <View style={styles.featuresGrid}>
+      {/* Quick Action Grid: All Logs & Share Bill */}
+      <View style={styles.actionGrid}>
         <TouchableOpacity 
-          style={[styles.featureCard, styles.featureCardBlue]}
+          style={[styles.actionCard, styles.actionCardBlue]}
           activeOpacity={0.7}
           onPress={() => setCurrentTab && setCurrentTab('history')}
         >
-          <View style={[styles.featureIconBubble, styles.bubbleBlue]}>
-            <Text style={styles.featureIconText}>📋</Text>
+          <View style={[styles.actionIconBubble, styles.bubbleBlue]}>
+            <Icon type="document" color="#38BDF8" size={20} />
           </View>
-          <Text style={styles.featureTitle}>All Logs</Text>
-          <Text style={styles.featureSubtitle}>{filteredEntries.length} records this mo.</Text>
+          <Text style={styles.actionTitle}>All Logs</Text>
+          <Text style={styles.actionSubtitle}>{filteredEntries.length} records this mo.</Text>
         </TouchableOpacity>
 
         <TouchableOpacity 
-          style={[styles.featureCard, styles.featureCardGreen]}
+          style={[styles.actionCard, styles.actionCardGreen]}
           activeOpacity={0.7}
           onPress={handleShareReport}
         >
-          <View style={[styles.featureIconBubble, styles.bubbleGreen]}>
-            <Text style={styles.featureIconText}>📤</Text>
+          <View style={[styles.actionIconBubble, styles.bubbleGreen]}>
+            <Icon type="share" color="#10B981" size={20} />
           </View>
-          <Text style={styles.featureTitle}>Share Bill</Text>
-          <Text style={styles.featureSubtitle}>WhatsApp & SMS</Text>
+          <Text style={styles.actionTitle}>Share Bill</Text>
+          <Text style={styles.actionSubtitle}>WhatsApp & Copy</Text>
         </TouchableOpacity>
       </View>
 
       {/* Month Progress Card */}
       <View style={styles.progressCard}>
         <View style={styles.progressHeader}>
-          <Text style={styles.progressTitle}>Month Progress</Text>
+          <View style={styles.progressTitleGroup}>
+            <View style={{ marginRight: 8 }}>
+              <Icon type="chart" color="#818CF8" size={17} />
+            </View>
+            <Text style={styles.progressTitle}>Month Progress</Text>
+          </View>
         </View>
-        <View style={styles.progressRow}>
+
+        <View style={styles.progressMetricsRow}>
           <View>
-            <Text style={styles.miniStatLabel}>DELIVERIES</Text>
-            <Text style={styles.miniStatValue}>
-              {filteredEntries.length} <Text style={styles.miniStatUnit}>/ {daysInMonth} days</Text>
+            <Text style={styles.metricLabel}>DELIVERIES</Text>
+            <Text style={styles.metricValue}>
+              {filteredEntries.length} <Text style={styles.metricUnit}>/ {daysInMonth} days</Text>
             </Text>
           </View>
+
           <View style={{ alignItems: 'flex-end' }}>
-            <Text style={styles.miniStatLabel}>DAILY AVG</Text>
-            <Text style={styles.miniStatValue}>
-              {avgDaily} <Text style={styles.miniStatUnit}>kg</Text>
+            <Text style={styles.metricLabel}>DAILY AVG</Text>
+            <Text style={styles.metricValue}>
+              {avgDaily} <Text style={styles.metricUnit}>kg</Text>
             </Text>
           </View>
         </View>
-        <View style={styles.progressBarTrack}>
-          <View style={[styles.progressBarFill, { width: `${Math.min((filteredEntries.length / daysInMonth) * 100, 100)}%` }]} />
+
+        <View style={styles.progressTrack}>
+          <View style={[styles.progressFill, { width: `${progressPercent}%` }]} />
         </View>
       </View>
     </ScrollView>
@@ -270,621 +377,334 @@ export default function DashboardScreen({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: '#0C0F1A',
+    ...(Platform.OS === 'web' && {
+      backgroundImage: 'linear-gradient(135deg, #0C0F1A 0%, #1a1040 40%, #0C0F1A 100%)',
+    }),
   },
   content: {
-    padding: spacing.lg,
-    paddingBottom: 110,
+    padding: spacing.md,
+    paddingBottom: 120,
   },
-  // Curved Hero Header
-  heroHeaderContainer: {
-    backgroundColor: '#1E1B4B',
-    borderBottomLeftRadius: 28,
-    borderBottomRightRadius: 28,
+  // Top Hero Gradient Card
+  heroCard: {
+    borderRadius: 26,
     paddingHorizontal: 20,
     paddingTop: 24,
     paddingBottom: 22,
-    marginHorizontal: -spacing.lg,
-    marginTop: -spacing.lg,
-    marginBottom: spacing.lg,
-    borderBottomWidth: 1.5,
-    borderBottomColor: 'rgba(129, 140, 248, 0.25)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
+    marginBottom: 16,
+    backgroundColor: '#6366F1',
+    shadowColor: '#6366F1',
+    shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.35,
-    shadowRadius: 18,
-    elevation: 8,
+    shadowRadius: 28,
+    elevation: 10,
+    ...(Platform.OS === 'web' && {
+      backgroundImage: 'linear-gradient(135deg, #6366F1 0%, #7C3AED 40%, #EC4899 100%)',
+      boxShadow: '0 16px 40px rgba(99, 102, 241, 0.35)',
+    }),
   },
-  heroMonthSelector: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: 'rgba(0, 0, 0, 0.25)',
-    borderRadius: 24,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    marginVertical: 14,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.16)',
-  },
-  heroMonthArrow: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  heroArrowText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: typography.fontWeights.bold,
-  },
-  heroMonthLabelContainer: {
-    alignItems: 'center',
-  },
-  heroMonthText: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: typography.fontWeights.bold,
-  },
-  heroMonthSubtext: {
-    color: 'rgba(255, 255, 255, 0.7)',
-    fontSize: 11,
-  },
-  heroBillRow: {
+  profileRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 14,
+    marginBottom: 18,
   },
-  heroBillLabel: {
-    color: 'rgba(255, 255, 255, 0.75)',
-    fontSize: 11,
-    fontWeight: typography.fontWeights.bold,
-    letterSpacing: 0.8,
-  },
-  heroBillAmount: {
-    color: '#FFFFFF',
-    fontSize: 30,
-    fontWeight: typography.fontWeights.extraBold,
-    letterSpacing: -0.5,
-    marginTop: 2,
-  },
-  heroStatsRow: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  heroStatGlass: {
-    flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.12)',
-    borderRadius: borderRadius.md,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.18)',
-  },
-  heroStatLabel: {
-    color: 'rgba(255, 255, 255, 0.75)',
-    fontSize: 10,
-    fontWeight: typography.fontWeights.bold,
-    letterSpacing: 0.5,
-  },
-  heroStatValue: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: typography.fontWeights.bold,
-    marginTop: 2,
-  },
-  heroStatUnit: {
-    fontSize: 11,
-    fontWeight: 'normal',
-    color: 'rgba(255, 255, 255, 0.75)',
-  },
-  heroProfileRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  heroGreeting: {
-    color: '#A5B4FC',
+  welcomeText: {
     fontSize: 13,
-    fontWeight: typography.fontWeights.medium,
+    color: 'rgba(255, 255, 255, 0.75)',
+    fontWeight: '500',
     marginBottom: 2,
   },
-  heroUserName: {
+  userNameText: {
+    fontSize: 22,
+    fontWeight: '800',
     color: '#FFFFFF',
-    fontSize: 24,
-    fontWeight: typography.fontWeights.extraBold,
-    letterSpacing: -0.5,
+    letterSpacing: -0.3,
   },
-  heroAvatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: colors.primary,
+  avatarCircle: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: 'rgba(255, 255, 255, 0.18)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 255, 255, 0.35)',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2.5,
-    borderColor: '#FFFFFF',
     position: 'relative',
   },
-  heroAvatarText: {
+  avatarInitials: {
     color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: typography.fontWeights.bold,
+    fontWeight: '800',
+    fontSize: 15,
   },
-  heroAvatarDot: {
+  onlineDot: {
     position: 'absolute',
     bottom: 0,
     right: 0,
     width: 12,
     height: 12,
     borderRadius: 6,
-    backgroundColor: colors.success,
-    borderWidth: 2,
-    borderColor: '#1E1B4B',
-  },
-
-  // Daily Insight Card
-  dailyInsightCard: {
-    backgroundColor: colors.card,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.md,
-    borderLeftWidth: 4,
-    borderLeftColor: colors.success,
-    borderWidth: 1,
-    borderColor: colors.cardBorder,
-  },
-  insightHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  insightTitle: {
-    color: colors.text,
-    fontSize: 14,
-    fontWeight: typography.fontWeights.bold,
-  },
-  insightIcon: {
-    fontSize: 16,
-  },
-  insightText: {
-    color: colors.textMuted,
-    fontSize: 12,
-    lineHeight: 17,
-  },
-
-  // 2x2 Feature Grid
-  featuresGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    marginBottom: spacing.md,
-  },
-  featureCard: {
-    width: '48%',
-    backgroundColor: colors.card,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.cardBorder,
-    borderLeftWidth: 4,
-    marginBottom: spacing.sm,
-  },
-  featureCardPurple: {
-    borderLeftColor: '#818CF8',
-  },
-  featureCardBlue: {
-    borderLeftColor: '#38BDF8',
-  },
-  featureCardAmber: {
-    borderLeftColor: '#F59E0B',
-  },
-  featureCardGreen: {
-    borderLeftColor: '#10B981',
-  },
-  featureIconBubble: {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 6,
-  },
-  bubblePurple: {
-    backgroundColor: 'rgba(129, 140, 248, 0.15)',
-  },
-  bubbleBlue: {
-    backgroundColor: 'rgba(56, 189, 248, 0.15)',
-  },
-  bubbleAmber: {
-    backgroundColor: 'rgba(245, 158, 11, 0.15)',
-  },
-  bubbleGreen: {
-    backgroundColor: 'rgba(16, 185, 129, 0.15)',
-  },
-  featureIconText: {
-    fontSize: 16,
-  },
-  featureTitle: {
-    color: colors.text,
-    fontSize: 14,
-    fontWeight: typography.fontWeights.bold,
-    marginBottom: 2,
-  },
-  featureSubtitle: {
-    color: colors.textMuted,
-    fontSize: 11,
-  },
-
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.lg,
-    marginTop: spacing.sm,
-  },
-  appTitle: {
-    fontSize: 24,
-    fontWeight: typography.fontWeights.bold,
-    color: colors.text,
-    letterSpacing: 0.3,
-  },
-  subtitle: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    marginTop: 2,
-  },
-  supplierHighlight: {
-    color: colors.primary,
-    fontWeight: typography.fontWeights.semibold,
-  },
-  shareBtn: {
-    backgroundColor: colors.surfaceElevated,
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: borderRadius.md,
-    borderWidth: 1,
-    borderColor: colors.cardBorder,
-  },
-  shareBtnText: {
-    color: colors.primary,
-    fontSize: 13,
-    fontWeight: typography.fontWeights.semibold,
-  },
-  progressCard: {
-    backgroundColor: colors.card,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.cardBorder,
-  },
-  progressHeader: {
-    marginBottom: spacing.md,
-  },
-  progressTitle: {
-    color: colors.text,
-    fontSize: 15,
-    fontWeight: typography.fontWeights.bold,
-  },
-  progressRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.md,
-  },
-  miniStatLabel: {
-    color: colors.textMuted,
-    fontSize: 10,
-    fontWeight: typography.fontWeights.bold,
-    letterSpacing: 0.5,
-    marginBottom: 2,
-  },
-  miniStatValue: {
-    color: colors.text,
-    fontSize: 16,
-    fontWeight: typography.fontWeights.extraBold,
-  },
-  miniStatUnit: {
-    fontSize: 11,
-    color: colors.textMuted,
-    fontWeight: 'normal',
-  },
-  progressBarTrack: {
-    height: 8,
-    backgroundColor: 'rgba(99, 102, 241, 0.15)',
-    borderRadius: 4,
-    overflow: 'hidden',
-  },
-  progressBarFill: {
-    height: '100%',
-    backgroundColor: colors.primary,
-    borderRadius: 4,
-  },
-  monthSelector: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: colors.surface,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.md,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: colors.cardBorder,
-    marginBottom: spacing.lg,
-  },
-  monthArrow: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: colors.surfaceElevated,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  arrowText: {
-    color: colors.primary,
-    fontSize: 14,
-  },
-  monthLabelContainer: {
-    alignItems: 'center',
-  },
-  monthText: {
-    color: colors.text,
-    fontSize: 17,
-    fontWeight: typography.fontWeights.bold,
-  },
-  monthSubtext: {
-    color: colors.textMuted,
-    fontSize: 11,
-    marginTop: 2,
-  },
-  heroCard: {
-    backgroundColor: colors.card,
-    borderRadius: borderRadius.xl,
-    padding: spacing.xl,
-    borderWidth: 1,
-    borderColor: colors.cardBorder,
-    marginBottom: spacing.lg,
-  },
-  heroHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.sm,
-  },
-  heroLabel: {
-    color: colors.textSecondary,
-    fontSize: 12,
-    fontWeight: typography.fontWeights.bold,
-    letterSpacing: 1,
-  },
-  statusBadge: {
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: borderRadius.full,
-    borderWidth: 1.5,
-    borderColor: 'rgba(255, 255, 255, 0.45)',
-  },
-  statusPaid: {
     backgroundColor: '#10B981',
+    borderWidth: 2,
+    borderColor: '#0C0F1A',
   },
-  statusUnpaid: {
-    backgroundColor: '#EF4444',
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: typography.fontWeights.extraBold,
-  },
-  statusPaidText: {
-    color: '#FFFFFF',
-  },
-  statusUnpaidText: {
-    color: '#FFFFFF',
-  },
-  heroAmount: {
-    fontSize: 34,
-    fontWeight: typography.fontWeights.extraBold,
-    color: colors.text,
-    letterSpacing: -0.5,
-    marginVertical: spacing.xs,
-  },
-  heroSubtext: {
-    color: colors.textMuted,
-    fontSize: 12,
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    marginBottom: spacing.lg,
-  },
-  statCard: {
-    width: '48%',
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.cardBorder,
-    marginBottom: spacing.md,
-  },
-  rateCard: {
-    width: '100%',
-  },
-  rateHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  editLink: {
-    color: colors.primary,
-    fontSize: 12,
-    fontWeight: typography.fontWeights.semibold,
-  },
-  editRateRow: {
+  // Month Navigator
+  monthSelectorBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: spacing.xs,
+    justifyContent: 'space-between',
+    backgroundColor: 'rgba(0, 0, 0, 0.18)',
+    borderRadius: 16,
+    paddingVertical: 5,
+    paddingHorizontal: 8,
+    marginBottom: 20,
   },
-  rateInput: {
-    flex: 1,
-    backgroundColor: colors.inputBg,
-    color: colors.text,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: borderRadius.sm,
-    fontSize: 16,
-    borderWidth: 1,
-    borderColor: colors.primary,
-    marginRight: 8,
-  },
-  saveRateBtn: {
-    backgroundColor: colors.success,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: borderRadius.sm,
-    marginRight: 4,
-  },
-  saveRateBtnText: {
-    color: '#FFF',
-    fontWeight: 'bold',
-  },
-  cancelRateBtn: {
-    backgroundColor: colors.surfaceElevated,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    borderRadius: borderRadius.sm,
-  },
-  cancelRateBtnText: {
-    color: colors.textSecondary,
-    fontWeight: 'bold',
-  },
-  statIcon: {
-    fontSize: 20,
-    marginBottom: 4,
-  },
-  statLabel: {
-    color: colors.textSecondary,
-    fontSize: 12,
-    marginBottom: 4,
-  },
-  statValue: {
-    color: colors.text,
-    fontSize: 18,
-    fontWeight: typography.fontWeights.bold,
-  },
-  unitText: {
-    fontSize: 12,
-    color: colors.textMuted,
-    fontWeight: typography.fontWeights.regular,
-  },
-  quickAddBtn: {
-    backgroundColor: colors.primary,
-    paddingVertical: spacing.md,
-    borderRadius: borderRadius.lg,
+  monthArrowBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.xl,
-    shadowColor: colors.primary,
+  },
+  monthArrowText: {
+    color: '#FFFFFF',
+    fontSize: 20,
+    fontWeight: '700',
+    lineHeight: 22,
+  },
+  monthLabelBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  monthLabelText: {
+    color: '#FFFFFF',
+    fontSize: 14.5,
+    fontWeight: '700',
+    marginLeft: 7,
+  },
+  // Bill Row
+  billRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  billLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: 'rgba(255, 255, 255, 0.8)',
+    letterSpacing: 0.8,
+    marginBottom: 4,
+  },
+  billAmount: {
+    fontSize: 32,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    letterSpacing: -0.5,
+  },
+  statusPill: {
+    paddingVertical: 7,
+    paddingHorizontal: 16,
+    borderRadius: 9999,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.25,
     shadowRadius: 8,
     elevation: 4,
   },
-  quickAddBtnText: {
+  statusPaidPill: {
+    backgroundColor: '#10B981',
+  },
+  statusUnpaidPill: {
+    backgroundColor: '#EF4444',
+  },
+  statusPillText: {
+    color: '#FFFFFF',
+    fontWeight: '800',
+    fontSize: 13,
+    letterSpacing: 0.3,
+  },
+  // Stats Row
+  statsRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  glassStatBox: {
+    flex: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.14)',
+    borderRadius: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.18)',
+    ...(Platform.OS === 'web' && {
+      backdropFilter: 'blur(10px)',
+    }),
+  },
+  statLabel: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: 'rgba(255, 255, 255, 0.75)',
+    letterSpacing: 0.5,
+    marginBottom: 3,
+  },
+  statValue: {
+    fontSize: 19,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  statUnit: {
+    fontSize: 12,
+    fontWeight: '500',
+    opacity: 0.8,
+  },
+  rateDisplayRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  rateEditRow: {
+    marginTop: 2,
+  },
+  rateInput: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: typography.fontWeights.bold,
+    fontWeight: '700',
+    paddingVertical: 2,
+    paddingHorizontal: 6,
+    borderRadius: 6,
+    width: 70,
   },
-  sectionHeader: {
+  // Monthly Overview Card
+  overviewCard: {
+    backgroundColor: 'rgba(22, 27, 46, 0.8)',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(99, 102, 241, 0.16)',
+    borderLeftWidth: 3.5,
+    borderLeftColor: '#06B6D4',
+  },
+  overviewHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: spacing.md,
+    marginBottom: 8,
   },
-  sectionTitle: {
-    fontSize: 17,
-    fontWeight: typography.fontWeights.bold,
-    color: colors.text,
-  },
-  viewAllText: {
-    color: colors.primary,
-    fontSize: 13,
-    fontWeight: typography.fontWeights.semibold,
-  },
-  emptyCard: {
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
-    padding: spacing.xl,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.cardBorder,
-    borderStyle: 'dashed',
-  },
-  emptyIcon: {
-    fontSize: 32,
-    marginBottom: spacing.sm,
-  },
-  emptyTitle: {
-    color: colors.text,
+  overviewTitle: {
     fontSize: 15,
-    fontWeight: typography.fontWeights.semibold,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
-  emptyDesc: {
-    color: colors.textMuted,
+  overviewText: {
+    fontSize: 13,
+    color: 'rgba(255, 255, 255, 0.55)',
+    lineHeight: 19,
+  },
+  // Action Grid
+  actionGrid: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 14,
+  },
+  actionCard: {
+    flex: 1,
+    backgroundColor: 'rgba(22, 27, 46, 0.8)',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(99, 102, 241, 0.16)',
+    borderLeftWidth: 3.5,
+  },
+  actionCardBlue: {
+    borderLeftColor: '#38BDF8',
+  },
+  actionCardGreen: {
+    borderLeftColor: '#10B981',
+  },
+  actionIconBubble: {
+    width: 42,
+    height: 42,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  bubbleBlue: {
+    backgroundColor: 'rgba(56, 189, 248, 0.14)',
+  },
+  bubbleGreen: {
+    backgroundColor: 'rgba(16, 185, 129, 0.14)',
+  },
+  actionTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 4,
+  },
+  actionSubtitle: {
     fontSize: 12,
-    textAlign: 'center',
-    marginTop: 4,
+    color: 'rgba(255, 255, 255, 0.45)',
   },
-  entryRow: {
+  // Month Progress Card
+  progressCard: {
+    backgroundColor: 'rgba(22, 27, 46, 0.8)',
+    borderRadius: 18,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: 'rgba(99, 102, 241, 0.16)',
+  },
+  progressHeader: {
+    marginBottom: 14,
+  },
+  progressTitleGroup: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surface,
-    padding: spacing.md,
-    borderRadius: borderRadius.md,
-    borderWidth: 1,
-    borderColor: colors.cardBorder,
-    marginBottom: spacing.sm,
   },
-  entryDateBlock: {
-    backgroundColor: colors.surfaceElevated,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: borderRadius.sm,
+  progressTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  progressMetricsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    marginRight: spacing.md,
-    minWidth: 42,
+    marginBottom: 12,
   },
-  entryDay: {
-    color: colors.text,
-    fontSize: 15,
-    fontWeight: typography.fontWeights.bold,
-  },
-  entryMonth: {
-    color: colors.primary,
+  metricLabel: {
     fontSize: 10,
-    fontWeight: typography.fontWeights.bold,
-    textTransform: 'uppercase',
+    fontWeight: '700',
+    color: 'rgba(255, 255, 255, 0.45)',
+    letterSpacing: 0.6,
+    marginBottom: 2,
   },
-  entryDetails: {
-    flex: 1,
+  metricValue: {
+    fontSize: 17,
+    fontWeight: '800',
+    color: '#FFFFFF',
   },
-  entryQty: {
-    color: colors.text,
-    fontSize: 15,
-    fontWeight: typography.fontWeights.bold,
-  },
-  entryNote: {
-    color: colors.textSecondary,
+  metricUnit: {
     fontSize: 12,
-    marginTop: 1,
+    fontWeight: '400',
+    color: 'rgba(255, 255, 255, 0.45)',
   },
-  entryCost: {
-    color: colors.primary,
-    fontSize: 15,
-    fontWeight: typography.fontWeights.bold,
+  progressTrack: {
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#6366F1',
+    ...(Platform.OS === 'web' && {
+      backgroundImage: 'linear-gradient(90deg, #6366F1 0%, #8B5CF6 50%, #EC4899 100%)',
+    }),
   },
 });
