@@ -10,7 +10,6 @@ import {
   Platform,
   ScrollView
 } from 'react-native';
-import { colors, typography, spacing, borderRadius } from '../theme';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function AuthScreen() {
@@ -77,11 +76,8 @@ export default function AuthScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.authWrapper}>
-          {/* Brand section */}
+          {/* Brand section - Clean & Minimalist */}
           <View style={styles.brandContainer}>
-            <View style={styles.logoBadge}>
-              <Text style={styles.logoDrop}>💧</Text>
-            </View>
             <Text style={styles.appTitle}>Milk Tracker</Text>
             <Text style={styles.appSubtitle}>
               {mode === 'login'
@@ -122,7 +118,6 @@ export default function AuthScreen() {
               {/* Error banner */}
               {errorMsg ? (
                 <View style={styles.errorBox}>
-                  <Text style={styles.errorIcon}>⚠️</Text>
                   <Text style={styles.errorText}>{errorMsg}</Text>
                 </View>
               ) : null}
@@ -130,7 +125,6 @@ export default function AuthScreen() {
               {/* Success banner */}
               {successMsg ? (
                 <View style={styles.successBox}>
-                  <Text style={styles.successIcon}>🎉</Text>
                   <Text style={styles.successText}>{successMsg}</Text>
                 </View>
               ) : null}
@@ -138,10 +132,7 @@ export default function AuthScreen() {
               {/* Full Name field (Register only) */}
               {mode === 'register' && (
                 <View style={styles.inputGroup}>
-                  <View style={styles.labelRow}>
-                    <Text style={styles.labelIcon}>👤</Text>
-                    <Text style={styles.inputLabel}>FULL NAME</Text>
-                  </View>
+                  <Text style={styles.inputLabel}>FULL NAME</Text>
                   <TextInput
                     style={styles.input}
                     value={name}
@@ -156,10 +147,7 @@ export default function AuthScreen() {
 
               {/* Email field */}
               <View style={styles.inputGroup}>
-                <View style={styles.labelRow}>
-                  <Text style={styles.labelIcon}>✉️</Text>
-                  <Text style={styles.inputLabel}>EMAIL</Text>
-                </View>
+                <Text style={styles.inputLabel}>EMAIL</Text>
                 <TextInput
                   style={styles.input}
                   value={email}
@@ -172,12 +160,9 @@ export default function AuthScreen() {
                 />
               </View>
 
-              {/* Password field with show/hide toggle */}
+              {/* Password field with minimal show/hide toggle */}
               <View style={styles.inputGroup}>
-                <View style={styles.labelRow}>
-                  <Text style={styles.labelIcon}>🔒</Text>
-                  <Text style={styles.inputLabel}>PASSWORD</Text>
-                </View>
+                <Text style={styles.inputLabel}>PASSWORD</Text>
                 <View style={styles.passwordWrapper}>
                   <TextInput
                     style={styles.passwordInput}
@@ -194,14 +179,14 @@ export default function AuthScreen() {
                     style={styles.togglePasswordBtn}
                     onPress={() => setShowPassword(!showPassword)}
                   >
-                    <Text style={styles.togglePasswordIcon}>
-                      {showPassword ? '👁️' : '🔒'}
+                    <Text style={styles.togglePasswordText}>
+                      {showPassword ? 'Hide' : 'Show'}
                     </Text>
                   </TouchableOpacity>
                 </View>
               </View>
 
-              {/* Gradient Submit Button */}
+              {/* Clean Gradient Submit Button */}
               <TouchableOpacity
                 activeOpacity={0.85}
                 style={[styles.submitBtn, isSubmitting && styles.submitBtnDisabled]}
@@ -212,7 +197,7 @@ export default function AuthScreen() {
                   <ActivityIndicator color="#FFFFFF" />
                 ) : (
                   <Text style={styles.submitBtnText}>
-                    {mode === 'login' ? '➜]  Sign In' : '👤+  Create Account'}
+                    {mode === 'login' ? 'Sign In' : 'Create Account'}
                   </Text>
                 )}
               </TouchableOpacity>
@@ -241,7 +226,7 @@ export default function AuthScreen() {
           {/* Micro Footer */}
           <View style={styles.footerContainer}>
             <Text style={styles.footerText}>
-              🥛 Track milk deliveries · Calculate bills · Manage payments
+              Track milk deliveries · Calculate bills · Manage payments
             </Text>
           </View>
         </View>
@@ -296,7 +281,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 32,
+    paddingVertical: 40,
   },
   authWrapper: {
     width: '100%',
@@ -306,42 +291,25 @@ const styles = StyleSheet.create({
   },
   brandContainer: {
     alignItems: 'center',
-    marginBottom: 24,
-  },
-  logoBadge: {
-    width: 68,
-    height: 68,
-    borderRadius: 34,
-    backgroundColor: 'rgba(99, 102, 241, 0.15)',
-    borderWidth: 1.5,
-    borderColor: 'rgba(99, 102, 241, 0.3)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 14,
-    shadowColor: '#6366F1',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.35,
-    shadowRadius: 16,
-    elevation: 8,
-  },
-  logoDrop: {
-    fontSize: 30,
+    marginBottom: 28,
+    marginTop: 8,
   },
   appTitle: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: '900',
     color: '#A5B4FC',
     letterSpacing: -0.5,
-    marginBottom: 6,
+    marginBottom: 8,
+    textAlign: 'center',
     ...(Platform.OS === 'web' && {
-      backgroundImage: 'linear-gradient(135deg, #A5B4FC 0%, #818CF8 50%, #C084FC 100%)',
+      backgroundImage: 'linear-gradient(135deg, #FFFFFF 0%, #A5B4FC 60%, #818CF8 100%)',
       WebkitBackgroundClip: 'text',
       WebkitTextFillColor: 'transparent',
     }),
   },
   appSubtitle: {
-    fontSize: 13,
-    color: 'rgba(255, 255, 255, 0.5)',
+    fontSize: 13.5,
+    color: 'rgba(255, 255, 255, 0.45)',
     fontWeight: '400',
     textAlign: 'center',
   },
@@ -396,70 +364,49 @@ const styles = StyleSheet.create({
     }),
   },
   formContainer: {
-    padding: 22,
+    padding: 24,
   },
   errorBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
     backgroundColor: 'rgba(239, 68, 68, 0.12)',
     borderRadius: 10,
-    paddingVertical: 10,
+    paddingVertical: 11,
     paddingHorizontal: 14,
     marginBottom: 16,
     borderWidth: 1,
     borderColor: 'rgba(239, 68, 68, 0.25)',
   },
-  errorIcon: {
-    fontSize: 14,
-    marginRight: 8,
-  },
   errorText: {
     color: '#FCA5A5',
     fontSize: 12.5,
     fontWeight: '500',
-    flex: 1,
     lineHeight: 18,
+    textAlign: 'center',
   },
   successBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
     backgroundColor: 'rgba(16, 185, 129, 0.15)',
     borderRadius: 10,
-    paddingVertical: 10,
+    paddingVertical: 11,
     paddingHorizontal: 14,
     marginBottom: 16,
     borderWidth: 1,
     borderColor: 'rgba(16, 185, 129, 0.3)',
   },
-  successIcon: {
-    fontSize: 14,
-    marginRight: 8,
-  },
   successText: {
     color: '#10B981',
     fontSize: 12.5,
     fontWeight: '500',
-    flex: 1,
     lineHeight: 18,
+    textAlign: 'center',
   },
   inputGroup: {
     marginBottom: 16,
-  },
-  labelRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 7,
-  },
-  labelIcon: {
-    fontSize: 12,
-    marginRight: 6,
-    opacity: 0.8,
   },
   inputLabel: {
     fontSize: 11,
     fontWeight: '700',
     color: 'rgba(255, 255, 255, 0.5)',
     letterSpacing: 0.8,
+    marginBottom: 8,
   },
   input: {
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
@@ -492,9 +439,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  togglePasswordIcon: {
-    fontSize: 16,
-    opacity: 0.6,
+  togglePasswordText: {
+    color: 'rgba(255, 255, 255, 0.45)',
+    fontSize: 12,
+    fontWeight: '600',
   },
   submitBtn: {
     backgroundColor: '#6366F1',
@@ -502,7 +450,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 6,
+    marginTop: 8,
     shadowColor: '#6366F1',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.45,
@@ -544,7 +492,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   footerContainer: {
-    marginTop: 20,
+    marginTop: 22,
     alignItems: 'center',
   },
   footerText: {
