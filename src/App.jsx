@@ -6,6 +6,7 @@ import Settings from './components/Settings';
 import Navbar from './components/Navbar';
 import AuthScreen from './components/AuthScreen';
 import { useAuth } from './contexts/AuthContext';
+import dataService from './services/dataService';
 import './App.css';
 
 // Per-user localStorage key generators
@@ -65,41 +66,31 @@ function MainApp({ userId }) {
   const [toastMessage, setToastMessage] = useState('');
   const [toastShow, setToastShow] = useState(false);
 
-  // Load data from per-user localStorage keys
+  // Load data via dataService
   useEffect(() => {
-    try {
-      const storedEntries = localStorage.getItem(getEntriesKey(userId));
-      if (storedEntries) setEntries(JSON.parse(storedEntries));
-      else setEntries([]);
+    let isMounted = true;
+    (async () => {
+      try {
+        const [loadedEntries, loadedSettings, monthlyData] = await Promise.all([
+          dataService.getEntries(userId),
+          dataService.getSettings(userId),
+          dataService.getMonthlyData(userId)
+        ]);
 
-      const storedSettings = localStorage.getItem(getSettingsKey(userId));
-      if (storedSettings) {
-        const parsed = JSON.parse(storedSettings);
-        // Migrate old 'mamuName' key to 'supplierName'
-        if (parsed.mamuName && !parsed.supplierName) {
-          parsed.supplierName = parsed.mamuName;
-          delete parsed.mamuName;
+        if (isMounted) {
+          setEntries(loadedEntries);
+          setSettings(loadedSettings);
+          setMonthlyRates(monthlyData.rates || {});
+          setMonthlyStatus(monthlyData.status || {});
         }
-        // Auto-migrate old default '₹' to 'PKR'
-        if (!parsed.currency || parsed.currency === '₹') {
-          parsed.currency = 'PKR';
-          localStorage.setItem(getSettingsKey(userId), JSON.stringify(parsed));
-        }
-        setSettings(parsed);
-      } else {
-        setSettings(DEFAULT_SETTINGS);
+
+        dataService.syncPendingQueue(userId).catch(() => {});
+      } catch (e) {
+        console.error("Failed to load user data:", e);
       }
+    })();
 
-      const storedRates = localStorage.getItem(getRatesKey(userId));
-      if (storedRates) setMonthlyRates(JSON.parse(storedRates));
-      else setMonthlyRates({});
-
-      const storedStatus = localStorage.getItem(getStatusKey(userId));
-      if (storedStatus) setMonthlyStatus(JSON.parse(storedStatus));
-      else setMonthlyStatus({});
-    } catch (e) {
-      console.error("Failed to load data from localStorage", e);
-    }
+    return () => { isMounted = false; };
   }, [userId]);
 
   // Helper function to trigger a notification toast
@@ -117,74 +108,62 @@ function MainApp({ userId }) {
     }
   }, [toastShow]);
 
-  // Save actions — scoped to current user
-  const saveEntries = useCallback((newEntries) => {
-    setEntries(newEntries);
-    localStorage.setItem(getEntriesKey(userId), JSON.stringify(newEntries));
-  }, [userId]);
-
-  const saveSettings = useCallback((newSettings) => {
-    setSettings(newSettings);
-    localStorage.setItem(getSettingsKey(userId), JSON.stringify(newSettings));
-  }, [userId]);
-
-  const saveMonthlyRates = useCallback((newRates) => {
-    setMonthlyRates(newRates);
-    localStorage.setItem(getRatesKey(userId), JSON.stringify(newRates));
-  }, [userId]);
-
-  const saveMonthlyStatus = useCallback((newStatus) => {
-    setMonthlyStatus(newStatus);
-    localStorage.setItem(getStatusKey(userId), JSON.stringify(newStatus));
-  }, [userId]);
-
   // State mutators
-  const addEntry = useCallback((newEntry) => {
+  const addEntry = useCallback(async (newEntry) => {
     const entryWithId = {
       ...newEntry,
-      id: Date.now().toString()
+      id: Date.now().toString(36) + Math.random().toString(36).substring(2, 6),
+      createdAt: new Date().toISOString()
     };
-    saveEntries([...entries, entryWithId]);
-  }, [entries, saveEntries]);
+    setEntries(prev => [entryWithId, ...prev]);
+    await dataService.addOrUpdateEntry(userId, entryWithId);
+  }, [userId]);
 
-  const updateEntry = useCallback((id, updatedFields) => {
-    const updatedEntries = entries.map(entry => 
-      entry.id === id ? { ...entry, ...updatedFields } : entry
-    );
-    saveEntries(updatedEntries);
-  }, [entries, saveEntries]);
+  const updateEntry = useCallback(async (id, updatedFields) => {
+    setEntries(prev => {
+      const updated = prev.map(entry => 
+        entry.id === id ? { ...entry, ...updatedFields } : entry
+      );
+      const target = updated.find(e => e.id === id);
+      if (target) {
+        dataService.addOrUpdateEntry(userId, target);
+      }
+      return updated;
+    });
+  }, [userId]);
 
-  const deleteEntry = useCallback((id) => {
-    const updatedEntries = entries.filter(entry => entry.id !== id);
-    saveEntries(updatedEntries);
-  }, [entries, saveEntries]);
+  const deleteEntry = useCallback(async (id) => {
+    setEntries(prev => prev.filter(entry => entry.id !== id));
+    await dataService.deleteEntry(userId, id);
+  }, [userId]);
 
-  const updateSettings = useCallback((newSettings) => {
-    saveSettings(newSettings);
-  }, [saveSettings]);
+  const updateSettings = useCallback(async (newSettings) => {
+    setSettings(newSettings);
+    await dataService.saveSettings(userId, newSettings);
+  }, [userId]);
 
-  const updateMonthlyRate = useCallback((monthStr, rate) => {
-    const updatedRates = {
-      ...monthlyRates,
-      [monthStr]: rate
-    };
-    saveMonthlyRates(updatedRates);
-  }, [monthlyRates, saveMonthlyRates]);
+  const updateMonthlyRate = useCallback(async (monthStr, rate) => {
+    setMonthlyRates(prev => ({ ...prev, [monthStr]: rate }));
+    await dataService.saveMonthlyRate(userId, monthStr, rate, monthlyStatus[monthStr]);
+  }, [userId, monthlyStatus]);
 
-  const toggleMonthlyStatus = useCallback((monthStr) => {
-    const updatedStatus = {
-      ...monthlyStatus,
-      [monthStr]: !monthlyStatus[monthStr]
-    };
-    saveMonthlyStatus(updatedStatus);
-  }, [monthlyStatus, saveMonthlyStatus]);
+  const toggleMonthlyStatus = useCallback(async (monthStr) => {
+    const current = monthlyStatus[monthStr] || false;
+    const newStatus = !current;
+    setMonthlyStatus(prev => ({ ...prev, [monthStr]: newStatus }));
+    await dataService.saveMonthlyStatus(userId, monthStr, newStatus, monthlyRates[monthStr]);
+  }, [userId, monthlyStatus, monthlyRates]);
 
-  const importData = useCallback((importedEntries, importedSettings, importedRates) => {
-    saveEntries(importedEntries);
-    saveSettings(importedSettings);
-    saveMonthlyRates(importedRates);
-    saveMonthlyStatus({});
-  }, [saveEntries, saveSettings, saveMonthlyRates, saveMonthlyStatus]);
+  const importData = useCallback(async (importedEntries, importedSettings, importedRates) => {
+    setEntries(importedEntries);
+    setSettings(importedSettings);
+    setMonthlyRates(importedRates);
+    setMonthlyStatus({});
+    for (const entry of importedEntries) {
+      await dataService.addOrUpdateEntry(userId, entry);
+    }
+    await dataService.saveSettings(userId, importedSettings);
+  }, [userId]);
 
   const resetData = useCallback(() => {
     localStorage.removeItem(getEntriesKey(userId));

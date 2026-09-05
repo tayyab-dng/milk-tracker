@@ -1,41 +1,40 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import supabase from '../../supabaseClient';
 import { Storage, USERS_KEY, SESSION_KEY } from '../storage';
 
 const AuthContext = createContext(null);
-
-function generateId() {
-  return Date.now().toString(36) + Math.random().toString(36).substring(2, 8);
-}
-
-// Simple fast mobile hashing function
-function hashPassword(password) {
-  let hash = 0;
-  for (let i = 0; i < password.length; i++) {
-    const char = password.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash |= 0;
-  }
-  return 'h_' + Math.abs(hash).toString(36);
-}
 
 export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Restore session on mount
+  // Restore session on mount & subscribe to Supabase auth state changes
   useEffect(() => {
     let isMounted = true;
+
+    // 1. Initial session check from Supabase
     (async () => {
       try {
-        const session = await Storage.getJSON(SESSION_KEY, null);
-        if (session && session.userId) {
-          const users = await Storage.getJSON(USERS_KEY, []);
-          const user = users.find(u => u.id === session.userId);
-          if (user && isMounted) {
-            setCurrentUser({ id: user.id, name: user.name, email: user.email });
-          } else {
-            await Storage.removeItem(SESSION_KEY);
+        if (supabase) {
+          const { data: { session }, error } = await supabase.auth.getSession();
+          if (session?.user && isMounted) {
+            const user = session.user;
+            const name = user.user_metadata?.name || user.email?.split('@')[0] || 'User';
+            setCurrentUser({ id: user.id, name, email: user.email });
+            await Storage.setJSON(SESSION_KEY, { userId: user.id, name, email: user.email });
+            setIsLoading(false);
+            return;
           }
+        }
+
+        // Fallback: check local storage session if Supabase had no active session or offline
+        const localSession = await Storage.getJSON(SESSION_KEY, null);
+        if (localSession?.userId && isMounted) {
+          setCurrentUser({
+            id: localSession.userId,
+            name: localSession.name || 'User',
+            email: localSession.email || ''
+          });
         }
       } catch (err) {
         console.warn('Error restoring session:', err);
@@ -44,9 +43,35 @@ export function AuthProvider({ children }) {
       }
     })();
 
-    return () => { isMounted = false; };
+    // 2. Auth State Change Listener
+    let authListener = null;
+    if (supabase) {
+      const { data } = supabase.auth.onAuthStateChange(async (event, session) => {
+        if (!isMounted) return;
+
+        if (session?.user) {
+          const user = session.user;
+          const name = user.user_metadata?.name || user.email?.split('@')[0] || 'User';
+          const userInfo = { id: user.id, name, email: user.email };
+          setCurrentUser(userInfo);
+          await Storage.setJSON(SESSION_KEY, userInfo);
+        } else if (event === 'SIGNED_OUT') {
+          setCurrentUser(null);
+          await Storage.removeItem(SESSION_KEY);
+        }
+      });
+      authListener = data?.subscription;
+    }
+
+    return () => {
+      isMounted = false;
+      if (authListener?.unsubscribe) {
+        authListener.unsubscribe();
+      }
+    };
   }, []);
 
+  // Register with Supabase
   const register = useCallback(async (name, email, password) => {
     const trimmedName = name.trim();
     const trimmedEmail = email.trim().toLowerCase();
@@ -57,38 +82,56 @@ export function AuthProvider({ children }) {
     if (!trimmedEmail || !trimmedEmail.includes('@')) {
       return { success: false, error: 'Please enter a valid email address.' };
     }
-    if (!password || password.length < 4) {
-      return { success: false, error: 'Password must be at least 4 characters.' };
+    if (!password || password.length < 6) {
+      return { success: false, error: 'Password must be at least 6 characters for cloud security.' };
     }
 
     try {
-      const users = await Storage.getJSON(USERS_KEY, []);
-      if (users.some(u => u.email === trimmedEmail)) {
-        return { success: false, error: 'An account with this email already exists.' };
+      if (supabase) {
+        const { data, error } = await supabase.auth.signUp({
+          email: trimmedEmail,
+          password: password,
+          options: {
+            data: {
+              name: trimmedName
+            }
+          }
+        });
+
+        if (error) {
+          return { success: false, error: error.message };
+        }
+
+        if (data?.user) {
+          const userInfo = {
+            id: data.user.id,
+            name: trimmedName,
+            email: trimmedEmail
+          };
+
+          // If session exists (email confirmation disabled or auto-confirmed)
+          if (data.session) {
+            setCurrentUser(userInfo);
+            await Storage.setJSON(SESSION_KEY, userInfo);
+            return { success: true };
+          }
+
+          // If email confirmation is required by Supabase project
+          return {
+            success: true,
+            needsEmailConfirmation: true,
+            message: 'Account created! Please check your email to confirm, or try logging in.'
+          };
+        }
       }
 
-      const passwordHash = hashPassword(password);
-      const newUser = {
-        id: generateId(),
-        name: trimmedName,
-        email: trimmedEmail,
-        passwordHash,
-        createdAt: new Date().toISOString()
-      };
-
-      users.push(newUser);
-      await Storage.setJSON(USERS_KEY, users);
-
-      const session = { userId: newUser.id, loginTime: new Date().toISOString() };
-      await Storage.setJSON(SESSION_KEY, session);
-
-      setCurrentUser({ id: newUser.id, name: newUser.name, email: newUser.email });
-      return { success: true };
+      return { success: false, error: 'Authentication service unavailable.' };
     } catch (err) {
       return { success: false, error: err.message || 'Registration failed.' };
     }
   }, []);
 
+  // Login with Supabase
   const login = useCallback(async (email, password) => {
     const trimmedEmail = email.trim().toLowerCase();
 
@@ -97,99 +140,108 @@ export function AuthProvider({ children }) {
     }
 
     try {
-      const users = await Storage.getJSON(USERS_KEY, []);
-      const user = users.find(u => u.email === trimmedEmail);
+      if (supabase) {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: trimmedEmail,
+          password: password
+        });
 
-      if (!user) {
-        return { success: false, error: 'No account found with this email.' };
+        if (error) {
+          // Check for common error explanations
+          if (error.message.toLowerCase().includes('email not confirmed')) {
+            return {
+              success: false,
+              error: 'Please verify your email address before signing in (or disable "Confirm email" in Supabase Auth settings).'
+            };
+          }
+          return { success: false, error: error.message };
+        }
+
+        if (data?.user) {
+          const name = data.user.user_metadata?.name || trimmedEmail.split('@')[0];
+          const userInfo = {
+            id: data.user.id,
+            name: name,
+            email: data.user.email
+          };
+
+          setCurrentUser(userInfo);
+          await Storage.setJSON(SESSION_KEY, userInfo);
+          return { success: true, user: userInfo };
+        }
       }
 
-      const inputHash = hashPassword(password);
-      if (user.passwordHash !== inputHash && user.password !== password) {
-        return { success: false, error: 'Incorrect password.' };
-      }
-
-      const session = { userId: user.id, loginTime: new Date().toISOString() };
-      await Storage.setJSON(SESSION_KEY, session);
-
-      setCurrentUser({ id: user.id, name: user.name, email: user.email });
-      return { success: true };
+      return { success: false, error: 'Authentication service unavailable.' };
     } catch (err) {
       return { success: false, error: err.message || 'Login failed.' };
     }
   }, []);
 
+  // Logout
   const logout = useCallback(async () => {
     try {
+      if (supabase) {
+        await supabase.auth.signOut();
+      }
       await Storage.removeItem(SESSION_KEY);
       setCurrentUser(null);
     } catch (err) {
       console.warn('Logout error:', err);
+      setCurrentUser(null);
     }
   }, []);
 
-  const updateProfile = useCallback(async (name, email) => {
+  // Update Profile Name
+  const updateProfile = useCallback(async (name) => {
     if (!currentUser) return { success: false, error: 'Not authenticated.' };
 
     const trimmedName = name.trim();
-    const trimmedEmail = email.trim().toLowerCase();
-
     if (!trimmedName || trimmedName.length < 2) {
       return { success: false, error: 'Name must be at least 2 characters.' };
     }
-    if (!trimmedEmail || !trimmedEmail.includes('@')) {
-      return { success: false, error: 'Please enter a valid email address.' };
-    }
 
     try {
-      const users = await Storage.getJSON(USERS_KEY, []);
-      const otherUser = users.find(u => u.email === trimmedEmail && u.id !== currentUser.id);
-      if (otherUser) {
-        return { success: false, error: 'Email is already used by another account.' };
+      if (supabase) {
+        const { error } = await supabase.auth.updateUser({
+          data: { name: trimmedName }
+        });
+        if (error) return { success: false, error: error.message };
+
+        // Also update profiles table
+        await supabase.from('profiles').upsert({
+          id: currentUser.id,
+          name: trimmedName,
+          email: currentUser.email,
+          updated_at: new Date().toISOString()
+        });
       }
 
-      const updatedUsers = users.map(u => {
-        if (u.id === currentUser.id) {
-          return { ...u, name: trimmedName, email: trimmedEmail };
-        }
-        return u;
-      });
-
-      await Storage.setJSON(USERS_KEY, updatedUsers);
-      setCurrentUser(prev => ({ ...prev, name: trimmedName, email: trimmedEmail }));
+      const updated = { ...currentUser, name: trimmedName };
+      setCurrentUser(updated);
+      await Storage.setJSON(SESSION_KEY, updated);
       return { success: true };
     } catch (err) {
       return { success: false, error: err.message || 'Update failed.' };
     }
   }, [currentUser]);
 
-  const changePassword = useCallback(async (currentPassword, newPassword) => {
+  // Change Password
+  const changePassword = useCallback(async (newPassword) => {
     if (!currentUser) return { success: false, error: 'Not authenticated.' };
 
-    if (!newPassword || newPassword.length < 4) {
-      return { success: false, error: 'New password must be at least 4 characters.' };
+    if (!newPassword || newPassword.length < 6) {
+      return { success: false, error: 'New password must be at least 6 characters.' };
     }
 
     try {
-      const users = await Storage.getJSON(USERS_KEY, []);
-      const userIndex = users.findIndex(u => u.id === currentUser.id);
-      if (userIndex === -1) {
-        return { success: false, error: 'User not found.' };
+      if (supabase) {
+        const { error } = await supabase.auth.updateUser({
+          password: newPassword
+        });
+        if (error) return { success: false, error: error.message };
+        return { success: true };
       }
-
-      const user = users[userIndex];
-      const currentHash = hashPassword(currentPassword);
-      if (user.passwordHash !== currentHash && user.password !== currentPassword) {
-        return { success: false, error: 'Current password is incorrect.' };
-      }
-
-      users[userIndex] = {
-        ...user,
-        passwordHash: hashPassword(newPassword)
-      };
-
-      await Storage.setJSON(USERS_KEY, users);
-      return { success: true };
+      return { success: false, error: 'Supabase client unavailable.' };
     } catch (err) {
       return { success: false, error: err.message || 'Password change failed.' };
     }
@@ -217,3 +269,5 @@ export function useAuth() {
   }
   return context;
 }
+
+export default AuthContext;

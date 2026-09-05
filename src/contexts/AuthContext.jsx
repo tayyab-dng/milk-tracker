@@ -1,80 +1,71 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import supabase from '../supabaseClient';
 
 const AuthContext = createContext(null);
-
-// localStorage keys for auth
-const USERS_KEY = 'milk_tracker_users';
 const SESSION_KEY = 'milk_tracker_session';
-
-// Hash password using SHA-256 (Web Crypto API)
-async function hashPassword(password) {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(password);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
-// Generate a simple unique ID
-function generateId() {
-  return Date.now().toString(36) + Math.random().toString(36).substring(2, 9);
-}
-
-// Get all users from localStorage
-function getStoredUsers() {
-  try {
-    const data = localStorage.getItem(USERS_KEY);
-    return data ? JSON.parse(data) : [];
-  } catch {
-    return [];
-  }
-}
-
-// Save users to localStorage
-function saveUsers(users) {
-  localStorage.setItem(USERS_KEY, JSON.stringify(users));
-}
-
-// Get stored session
-function getStoredSession() {
-  try {
-    const data = localStorage.getItem(SESSION_KEY);
-    return data ? JSON.parse(data) : null;
-  } catch {
-    return null;
-  }
-}
-
-// Save session
-function saveSession(session) {
-  if (session) {
-    localStorage.setItem(SESSION_KEY, JSON.stringify(session));
-  } else {
-    localStorage.removeItem(SESSION_KEY);
-  }
-}
 
 export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Restore session on mount
   useEffect(() => {
-    const session = getStoredSession();
-    if (session && session.userId) {
-      const users = getStoredUsers();
-      const user = users.find(u => u.id === session.userId);
-      if (user) {
-        setCurrentUser({ id: user.id, name: user.name, email: user.email });
-      } else {
-        // Session references a non-existent user, clear it
-        saveSession(null);
+    let isMounted = true;
+
+    // 1. Initial session check
+    (async () => {
+      try {
+        if (supabase) {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session?.user && isMounted) {
+            const user = session.user;
+            const name = user.user_metadata?.name || user.email?.split('@')[0] || 'User';
+            setCurrentUser({ id: user.id, name, email: user.email });
+            setIsLoading(false);
+            return;
+          }
+        }
+
+        // Fallback to localStorage
+        const stored = localStorage.getItem(SESSION_KEY);
+        if (stored && isMounted) {
+          setCurrentUser(JSON.parse(stored));
+        }
+      } catch (err) {
+        console.warn('Session check error:', err);
+      } finally {
+        if (isMounted) setIsLoading(false);
       }
+    })();
+
+    // 2. Auth State Change Listener
+    let authListener = null;
+    if (supabase) {
+      const { data } = supabase.auth.onAuthStateChange(async (event, session) => {
+        if (!isMounted) return;
+
+        if (session?.user) {
+          const user = session.user;
+          const name = user.user_metadata?.name || user.email?.split('@')[0] || 'User';
+          const userInfo = { id: user.id, name, email: user.email };
+          setCurrentUser(userInfo);
+          localStorage.setItem(SESSION_KEY, JSON.stringify(userInfo));
+        } else if (event === 'SIGNED_OUT') {
+          setCurrentUser(null);
+          localStorage.removeItem(SESSION_KEY);
+        }
+      });
+      authListener = data?.subscription;
     }
-    setIsLoading(false);
+
+    return () => {
+      isMounted = false;
+      if (authListener?.unsubscribe) {
+        authListener.unsubscribe();
+      }
+    };
   }, []);
 
-  // Register a new user
+  // Register
   const register = useCallback(async (name, email, password) => {
     const trimmedName = name.trim();
     const trimmedEmail = email.trim().toLowerCase();
@@ -85,35 +76,42 @@ export function AuthProvider({ children }) {
     if (!trimmedEmail || !trimmedEmail.includes('@')) {
       return { success: false, error: 'Please enter a valid email address.' };
     }
-    if (!password || password.length < 4) {
-      return { success: false, error: 'Password must be at least 4 characters.' };
+    if (!password || password.length < 6) {
+      return { success: false, error: 'Password must be at least 6 characters for cloud security.' };
     }
 
-    const users = getStoredUsers();
+    try {
+      if (supabase) {
+        const { data, error } = await supabase.auth.signUp({
+          email: trimmedEmail,
+          password: password,
+          options: {
+            data: { name: trimmedName }
+          }
+        });
 
-    // Check for duplicate email
-    if (users.some(u => u.email === trimmedEmail)) {
-      return { success: false, error: 'An account with this email already exists.' };
+        if (error) {
+          return { success: false, error: error.message };
+        }
+
+        if (data?.user) {
+          const userInfo = { id: data.user.id, name: trimmedName, email: trimmedEmail };
+          if (data.session) {
+            setCurrentUser(userInfo);
+            localStorage.setItem(SESSION_KEY, JSON.stringify(userInfo));
+            return { success: true, user: userInfo };
+          }
+          return {
+            success: true,
+            needsEmailConfirmation: true,
+            message: 'Account created! Please check your email to confirm, then sign in.'
+          };
+        }
+      }
+      return { success: false, error: 'Authentication service unavailable.' };
+    } catch (err) {
+      return { success: false, error: err.message || 'Registration failed.' };
     }
-
-    const passwordHash = await hashPassword(password);
-    const newUser = {
-      id: generateId(),
-      name: trimmedName,
-      email: trimmedEmail,
-      passwordHash,
-      createdAt: new Date().toISOString()
-    };
-
-    users.push(newUser);
-    saveUsers(users);
-
-    // Auto-login
-    const sessionUser = { id: newUser.id, name: newUser.name, email: newUser.email };
-    setCurrentUser(sessionUser);
-    saveSession({ userId: newUser.id });
-
-    return { success: true, user: sessionUser };
   }, []);
 
   // Login
@@ -124,73 +122,91 @@ export function AuthProvider({ children }) {
       return { success: false, error: 'Please enter both email and password.' };
     }
 
-    const users = getStoredUsers();
-    const user = users.find(u => u.email === trimmedEmail);
+    try {
+      if (supabase) {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: trimmedEmail,
+          password: password
+        });
 
-    if (!user) {
-      return { success: false, error: 'No account found with this email.' };
+        if (error) {
+          if (error.message.toLowerCase().includes('email not confirmed')) {
+            return {
+              success: false,
+              error: 'Please verify your email address before signing in (or disable "Confirm email" in Supabase Auth settings).'
+            };
+          }
+          return { success: false, error: error.message };
+        }
+
+        if (data?.user) {
+          const name = data.user.user_metadata?.name || trimmedEmail.split('@')[0];
+          const userInfo = { id: data.user.id, name, email: data.user.email };
+          setCurrentUser(userInfo);
+          localStorage.setItem(SESSION_KEY, JSON.stringify(userInfo));
+          return { success: true, user: userInfo };
+        }
+      }
+      return { success: false, error: 'Authentication service unavailable.' };
+    } catch (err) {
+      return { success: false, error: err.message || 'Login failed.' };
     }
-
-    const passwordHash = await hashPassword(password);
-    if (user.passwordHash !== passwordHash) {
-      return { success: false, error: 'Incorrect password. Please try again.' };
-    }
-
-    const sessionUser = { id: user.id, name: user.name, email: user.email };
-    setCurrentUser(sessionUser);
-    saveSession({ userId: user.id });
-
-    return { success: true, user: sessionUser };
   }, []);
 
   // Logout
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    try {
+      if (supabase) {
+        await supabase.auth.signOut();
+      }
+    } catch (err) {
+      console.warn('Logout error:', err);
+    }
+    localStorage.removeItem(SESSION_KEY);
     setCurrentUser(null);
-    saveSession(null);
   }, []);
 
-  // Change password
-  const changePassword = useCallback(async (currentPassword, newPassword) => {
-    if (!currentUser) {
-      return { success: false, error: 'Not logged in.' };
+  // Update Profile Name
+  const updateProfile = useCallback(async (newName) => {
+    if (!currentUser) return;
+    const trimmed = newName.trim();
+    if (!trimmed || trimmed.length < 2) return;
+
+    try {
+      if (supabase) {
+        await supabase.auth.updateUser({ data: { name: trimmed } });
+        await supabase.from('profiles').upsert({
+          id: currentUser.id,
+          name: trimmed,
+          email: currentUser.email,
+          updated_at: new Date().toISOString()
+        });
+      }
+      const updated = { ...currentUser, name: trimmed };
+      setCurrentUser(updated);
+      localStorage.setItem(SESSION_KEY, JSON.stringify(updated));
+    } catch (err) {
+      console.warn('Update profile error:', err);
     }
-
-    if (!newPassword || newPassword.length < 4) {
-      return { success: false, error: 'New password must be at least 4 characters.' };
-    }
-
-    const users = getStoredUsers();
-    const userIndex = users.findIndex(u => u.id === currentUser.id);
-    if (userIndex === -1) {
-      return { success: false, error: 'User not found.' };
-    }
-
-    const currentHash = await hashPassword(currentPassword);
-    if (users[userIndex].passwordHash !== currentHash) {
-      return { success: false, error: 'Current password is incorrect.' };
-    }
-
-    users[userIndex].passwordHash = await hashPassword(newPassword);
-    saveUsers(users);
-
-    return { success: true };
   }, [currentUser]);
 
-  // Update profile name
-  const updateProfile = useCallback((newName) => {
-    if (!currentUser) return;
+  // Change Password
+  const changePassword = useCallback(async (currentPassword, newPassword) => {
+    if (!currentUser) return { success: false, error: 'Not logged in.' };
+    if (!newPassword || newPassword.length < 6) {
+      return { success: false, error: 'New password must be at least 6 characters.' };
+    }
 
-    const trimmedName = newName.trim();
-    if (!trimmedName || trimmedName.length < 2) return;
-
-    const users = getStoredUsers();
-    const userIndex = users.findIndex(u => u.id === currentUser.id);
-    if (userIndex === -1) return;
-
-    users[userIndex].name = trimmedName;
-    saveUsers(users);
-
-    setCurrentUser(prev => ({ ...prev, name: trimmedName }));
+    try {
+      if (supabase) {
+        const { error } = await supabase.auth.updateUser({ password: newPassword });
+        if (error) return { success: false, error: error.message };
+        return { success: true };
+      }
+      return { success: false, error: 'Auth service unavailable.' };
+    } catch (err) {
+      return { success: false, error: err.message || 'Password update failed.' };
+    }
   }, [currentUser]);
 
   const value = {

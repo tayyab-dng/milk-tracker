@@ -10,14 +10,8 @@ import {
   StatusBar
 } from 'react-native';
 import { colors, typography, spacing, borderRadius } from './theme';
-import {
-  Storage,
-  getEntriesKey,
-  getSettingsKey,
-  getRatesKey,
-  getStatusKey,
-  DEFAULT_SETTINGS
-} from './storage';
+import { DEFAULT_SETTINGS } from './storage';
+import dataService from '../services/dataService';
 import Navbar from './components/Navbar';
 import DashboardScreen from './screens/DashboardScreen';
 import AddEntryScreen from './screens/AddEntryScreen';
@@ -68,18 +62,22 @@ export default function MainApp({ userId }) {
     let isMounted = true;
     (async () => {
       try {
-        const storedEntries = await Storage.getJSON(getEntriesKey(userId), []);
-        const storedSettings = await Storage.getJSON(getSettingsKey(userId), DEFAULT_SETTINGS);
-        const storedRates = await Storage.getJSON(getRatesKey(userId), {});
-        const storedStatus = await Storage.getJSON(getStatusKey(userId), {});
+        const [loadedEntries, loadedSettings, monthlyData] = await Promise.all([
+          dataService.getEntries(userId),
+          dataService.getSettings(userId),
+          dataService.getMonthlyData(userId)
+        ]);
 
         if (isMounted) {
-          setEntries(storedEntries);
-          setSettings(storedSettings);
-          setMonthlyRates(storedRates);
-          setMonthlyStatus(storedStatus);
+          setEntries(loadedEntries);
+          setSettings(loadedSettings);
+          setMonthlyRates(monthlyData.rates || {});
+          setMonthlyStatus(monthlyData.status || {});
           setIsDataLoaded(true);
         }
+
+        // Try syncing any pending offline queue
+        dataService.syncPendingQueue(userId).catch(() => {});
       } catch (err) {
         console.warn('Error loading user data:', err);
         if (isMounted) setIsDataLoaded(true);
@@ -97,59 +95,52 @@ export default function MainApp({ userId }) {
       createdAt: new Date().toISOString(),
     };
 
-    setEntries(prev => {
-      const updated = [newEntry, ...prev];
-      Storage.setJSON(getEntriesKey(userId), updated);
-      return updated;
-    });
+    setEntries(prev => [newEntry, ...prev]);
+    await dataService.addOrUpdateEntry(userId, newEntry);
   }, [userId]);
 
   const handleDeleteEntry = useCallback(async (id) => {
-    setEntries(prev => {
-      const updated = prev.filter(e => e.id !== id);
-      Storage.setJSON(getEntriesKey(userId), updated);
-      return updated;
-    });
+    setEntries(prev => prev.filter(e => e.id !== id));
+    await dataService.deleteEntry(userId, id);
   }, [userId]);
 
   const handleUpdateEntry = useCallback(async (id, updatedFields) => {
     setEntries(prev => {
       const updated = prev.map(e => (e.id === id ? { ...e, ...updatedFields } : e));
-      Storage.setJSON(getEntriesKey(userId), updated);
+      const target = updated.find(e => e.id === id);
+      if (target) {
+        dataService.addOrUpdateEntry(userId, target);
+      }
       return updated;
     });
   }, [userId]);
 
   const handleUpdateSettings = useCallback(async (newSettings) => {
     setSettings(newSettings);
-    await Storage.setJSON(getSettingsKey(userId), newSettings);
+    await dataService.saveSettings(userId, newSettings);
   }, [userId]);
 
   const handleUpdateMonthlyRate = useCallback(async (month, rate) => {
     setMonthlyRates(prev => {
       const updated = { ...prev, [month]: rate };
-      Storage.setJSON(getRatesKey(userId), updated);
       return updated;
     });
-  }, [userId]);
+    await dataService.saveMonthlyRate(userId, month, rate, monthlyStatus[month]);
+  }, [userId, monthlyStatus]);
 
   const handleToggleMonthlyStatus = useCallback(async (month) => {
-    setMonthlyStatus(prev => {
-      const current = prev[month] || false;
-      const updated = { ...prev, [month]: !current };
-      Storage.setJSON(getStatusKey(userId), updated);
-      showToast(!current ? `Marked ${month} as Paid! ✅` : `Marked ${month} as Unpaid ⏳`);
-      return updated;
-    });
-  }, [userId, showToast]);
+    const current = monthlyStatus[month] || false;
+    const newStatus = !current;
+    setMonthlyStatus(prev => ({ ...prev, [month]: newStatus }));
+    await dataService.saveMonthlyStatus(userId, month, newStatus, monthlyRates[month]);
+    showToast(newStatus ? `Marked ${month} as Paid! ✅` : `Marked ${month} as Unpaid ⏳`);
+  }, [userId, monthlyStatus, monthlyRates, showToast]);
 
   const handleResetData = useCallback(async () => {
     setEntries([]);
     setMonthlyRates({});
     setMonthlyStatus({});
-    await Storage.removeItem(getEntriesKey(userId));
-    await Storage.removeItem(getRatesKey(userId));
-    await Storage.removeItem(getStatusKey(userId));
+    await dataService.resetUserData(userId);
   }, [userId]);
 
   if (!isDataLoaded) {

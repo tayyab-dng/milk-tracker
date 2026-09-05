@@ -21,10 +21,12 @@ export default function AuthScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async () => {
     setErrorMsg('');
+    setSuccessMsg('');
     setIsSubmitting(true);
 
     try {
@@ -32,6 +34,9 @@ export default function AuthScreen() {
         const res = await register(name, email, password);
         if (!res.success) {
           setErrorMsg(res.error || 'Registration failed.');
+        } else if (res.needsEmailConfirmation) {
+          setSuccessMsg(res.message || 'Account created! Please check your email to confirm, then sign in.');
+          setIsRegister(false);
         }
       } else {
         const res = await login(email, password);
@@ -71,6 +76,7 @@ export default function AuthScreen() {
               onPress={() => {
                 setIsRegister(false);
                 setErrorMsg('');
+                setSuccessMsg('');
               }}
             >
               <Text style={[styles.tabBtnText, !isRegister && styles.tabBtnTextActive]}>
@@ -84,6 +90,7 @@ export default function AuthScreen() {
               onPress={() => {
                 setIsRegister(true);
                 setErrorMsg('');
+                setSuccessMsg('');
               }}
             >
               <Text style={[styles.tabBtnText, isRegister && styles.tabBtnTextActive]}>
@@ -95,6 +102,12 @@ export default function AuthScreen() {
           {errorMsg ? (
             <View style={styles.errorBox}>
               <Text style={styles.errorText}>⚠️ {errorMsg}</Text>
+            </View>
+          ) : null}
+
+          {successMsg ? (
+            <View style={styles.successBox}>
+              <Text style={styles.successText}>🎉 {successMsg}</Text>
             </View>
           ) : null}
 
@@ -252,6 +265,19 @@ const styles = StyleSheet.create({
   errorText: {
     color: colors.danger,
     fontSize: 12,
+  },
+  successBox: {
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    padding: 12,
+    borderRadius: borderRadius.sm,
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.3)',
+  },
+  successText: {
+    color: '#10B981',
+    fontSize: 12,
+    lineHeight: 18,
   },
   inputGroup: {
     marginBottom: spacing.md,
