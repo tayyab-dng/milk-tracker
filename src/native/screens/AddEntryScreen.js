@@ -10,28 +10,125 @@ import {
   KeyboardAvoidingView,
   Platform
 } from 'react-native';
-import { colors, typography, spacing, borderRadius } from '../theme';
+
+// Clean SVG icons for Web with minimalist fallbacks
+function AddIcon({ type, color = 'currentColor', size = 18 }) {
+  if (Platform.OS === 'web') {
+    if (type === 'back') {
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="15 18 9 12 15 6" />
+        </svg>
+      );
+    }
+    if (type === 'calendar') {
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+          <line x1="16" y1="2" x2="16" y2="6" />
+          <line x1="8" y1="2" x2="8" y2="6" />
+          <line x1="3" y1="10" x2="21" y2="10" />
+        </svg>
+      );
+    }
+    if (type === 'droplet') {
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 2C12 2 6 10 6 14.5C6 17.8 8.7 21 12 21C15.3 21 18 17.8 18 14.5C18 10 12 2 12 2Z" />
+        </svg>
+      );
+    }
+    if (type === 'shift') {
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="10" />
+          <polyline points="12 6 12 12 16 14" />
+        </svg>
+      );
+    }
+    if (type === 'sun') {
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="5" />
+          <line x1="12" y1="1" x2="12" y2="3" />
+          <line x1="12" y1="21" x2="12" y2="23" />
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+          <line x1="1" y1="12" x2="3" y2="12" />
+          <line x1="21" y1="12" x2="23" y2="12" />
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+        </svg>
+      );
+    }
+    if (type === 'moon') {
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+        </svg>
+      );
+    }
+    if (type === 'notes') {
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+          <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+        </svg>
+      );
+    }
+    if (type === 'save') {
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+          <polyline points="17 21 17 13 7 13 7 21" />
+          <polyline points="7 3 7 8 15 8" />
+        </svg>
+      );
+    }
+    if (type === 'check') {
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="20 6 9 17 4 12" />
+        </svg>
+      );
+    }
+  }
+
+  const glyphs = {
+    back: '‹',
+    calendar: '📅',
+    droplet: '💧',
+    shift: '⏱',
+    sun: '☼',
+    moon: '☾',
+    notes: '✎',
+    save: '💾',
+    check: '✓'
+  };
+  return <Text style={{ color, fontSize: size - 2, fontWeight: '700' }}>{glyphs[type] || '•'}</Text>;
+}
 
 export default function AddEntryScreen({
   onAddEntry,
-  settings,
+  settings = {},
   showToast,
   setCurrentTab
 }) {
-  const getTodayString = (offsetDays = 0) => {
-    const d = new Date();
-    d.setDate(d.getDate() - offsetDays);
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
+  const getTodayString = () => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
   };
 
-  const [date, setDate] = useState(getTodayString(0));
-  const [quantity, setQuantity] = useState(settings.defaultQuantity ? settings.defaultQuantity.toString() : '1.0');
+  const [date, setDate] = useState(getTodayString());
+  const [quantity, setQuantity] = useState(
+    settings.defaultQuantity ? settings.defaultQuantity.toString() : '1.0'
+  );
   const [shift, setShift] = useState('Morning');
   const [note, setNote] = useState('');
-  const [isSaved, setIsSaved] = useState(false);
+  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     if (settings.defaultQuantity) {
@@ -52,7 +149,11 @@ export default function AddEntryScreen({
   const handleSubmit = () => {
     const parsedQty = parseFloat(quantity);
     if (isNaN(parsedQty) || parsedQty <= 0) {
-      Alert.alert('Invalid Quantity', 'Please enter a valid amount of milk (kg/L).');
+      if (showToast) {
+        showToast('Please enter a valid quantity of milk.');
+      } else {
+        Alert.alert('Invalid Quantity', 'Please enter a valid amount of milk.');
+      }
       return;
     }
 
@@ -63,173 +164,242 @@ export default function AddEntryScreen({
       note: note.trim()
     });
 
-    setIsSaved(true);
-    showToast(`Logged ${parsedQty} kg for ${date}! 🥛`);
+    setSaved(true);
+    if (showToast) {
+      showToast(`Logged ${parsedQty} kg for ${new Date(date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}!`);
+    }
 
     setTimeout(() => {
-      setIsSaved(false);
+      setSaved(false);
       setNote('');
-      setCurrentTab('dashboard');
-    }, 500);
+      if (setCurrentTab) setCurrentTab('dashboard');
+    }, 550);
   };
 
   const quickBtns = settings.quickQuantities || [0.5, 1.0, 1.5, 2.0];
-  const isToday = date === getTodayString(0);
-  const isYesterday = date === getTodayString(1);
 
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       style={styles.keyboardContainer}
     >
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
-        <Text style={styles.pageTitle}>Log Milk Delivery 🥛</Text>
-        <Text style={styles.pageSubtitle}>Record today's milk supply</Text>
-
-        {/* Date Shortcuts */}
-        <View style={styles.card}>
-          <Text style={styles.label}>Select Date</Text>
-          <View style={styles.dateButtonsRow}>
-            <TouchableOpacity
-              activeOpacity={0.8}
-              style={[styles.dateChip, isToday && styles.dateChipActive]}
-              onPress={() => setDate(getTodayString(0))}
-            >
-              <Text style={[styles.dateChipText, isToday && styles.dateChipTextActive]}>
-                Today ({new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short' })})
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              activeOpacity={0.8}
-              style={[styles.dateChip, isYesterday && styles.dateChipActive]}
-              onPress={() => setDate(getTodayString(1))}
-            >
-              <Text style={[styles.dateChipText, isYesterday && styles.dateChipTextActive]}>
-                Yesterday
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.dateInputWrapper}>
-            <Text style={styles.dateInputLabel}>Custom Date (YYYY-MM-DD):</Text>
-            <TextInput
-              style={styles.dateInput}
-              value={date}
-              onChangeText={setDate}
-              placeholder="YYYY-MM-DD"
-              placeholderTextColor={colors.textMuted}
-            />
-          </View>
+      <View style={styles.container}>
+        {/* Top Header Row with Back Button & Centered Screen Title */}
+        <View style={styles.topHeader}>
+          <TouchableOpacity
+            activeOpacity={0.7}
+            style={styles.backBtn}
+            onPress={() => setCurrentTab && setCurrentTab('dashboard')}
+          >
+            <AddIcon type="back" color="#FFFFFF" size={20} />
+          </TouchableOpacity>
+          <Text style={styles.topHeaderTitle}>Add Daily Milk</Text>
+          <View style={{ width: 40 }} />
         </View>
 
-        {/* Shift Toggle */}
-        <View style={styles.card}>
-          <Text style={styles.label}>Delivery Shift</Text>
-          <View style={styles.shiftRow}>
-            <TouchableOpacity
-              activeOpacity={0.8}
-              style={[styles.shiftBtn, shift === 'Morning' && styles.shiftBtnActive]}
-              onPress={() => setShift('Morning')}
-            >
-              <Text style={styles.shiftEmoji}>🌅</Text>
-              <Text style={[styles.shiftText, shift === 'Morning' && styles.shiftTextActive]}>
-                Morning
-              </Text>
-            </TouchableOpacity>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Main Page Header */}
+          <Text style={styles.pageTitle}>Log Milk Delivery</Text>
 
-            <TouchableOpacity
-              activeOpacity={0.8}
-              style={[styles.shiftBtn, shift === 'Evening' && styles.shiftBtnActive]}
-              onPress={() => setShift('Evening')}
-            >
-              <Text style={styles.shiftEmoji}>🌙</Text>
-              <Text style={[styles.shiftText, shift === 'Evening' && styles.shiftTextActive]}>
-                Evening
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Quantity Stepper */}
-        <View style={styles.card}>
-          <Text style={styles.label}>Quantity (kg / liters)</Text>
-          <View style={styles.stepperRow}>
-            <TouchableOpacity
-              activeOpacity={0.7}
-              style={styles.stepBtn}
-              onPress={() => adjustQuantity(-0.5)}
-            >
-              <Text style={styles.stepBtnText}>-0.5</Text>
-            </TouchableOpacity>
-
-            <View style={styles.qtyDisplay}>
-              <TextInput
-                style={styles.qtyInput}
-                value={quantity}
-                onChangeText={setQuantity}
-                keyboardType="numeric"
-                selectTextOnFocus
-              />
-              <Text style={styles.qtyUnit}>kg / L</Text>
+          {/* 1. Date Field */}
+          <View style={styles.formGroup}>
+            <View style={styles.fieldLabelRow}>
+              <AddIcon type="calendar" color="#818CF8" size={14} />
+              <Text style={styles.fieldLabel}>DATE</Text>
             </View>
 
-            <TouchableOpacity
-              activeOpacity={0.7}
-              style={styles.stepBtn}
-              onPress={() => adjustQuantity(0.5)}
-            >
-              <Text style={styles.stepBtnText}>+0.5</Text>
-            </TouchableOpacity>
+            {Platform.OS === 'web' ? (
+              <input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                required
+                style={{
+                  backgroundColor: 'rgba(22, 27, 46, 0.8)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: 12,
+                  padding: '0 14px',
+                  height: 48,
+                  fontSize: 15,
+                  fontWeight: 500,
+                  color: '#FFFFFF',
+                  width: '100%',
+                  boxSizing: 'border-box',
+                  outline: 'none',
+                  fontFamily: 'inherit',
+                  colorScheme: 'dark'
+                }}
+              />
+            ) : (
+              <TextInput
+                style={styles.textInput}
+                value={date}
+                onChangeText={setDate}
+                placeholder="YYYY-MM-DD"
+                placeholderTextColor="rgba(255, 255, 255, 0.3)"
+              />
+            )}
           </View>
 
-          {/* Quick Select Chips */}
-          <View style={styles.quickChipsRow}>
-            {quickBtns.map((val) => {
-              const isSelected = parseFloat(quantity) === val;
-              return (
-                <TouchableOpacity
-                  key={val}
-                  activeOpacity={0.8}
-                  style={[styles.quickChip, isSelected && styles.quickChipActive]}
-                  onPress={() => handleQuickSelect(val)}
+          {/* 2. Delivery Shift (Morning / Evening) */}
+          <View style={styles.formGroup}>
+            <View style={styles.fieldLabelRow}>
+              <AddIcon type="shift" color="#818CF8" size={14} />
+              <Text style={styles.fieldLabel}>DELIVERY SHIFT</Text>
+            </View>
+
+            <View style={styles.shiftRow}>
+              <TouchableOpacity
+                activeOpacity={0.8}
+                style={[
+                  styles.shiftBtn,
+                  shift === 'Morning' && styles.shiftBtnActive
+                ]}
+                onPress={() => setShift('Morning')}
+              >
+                <AddIcon
+                  type="sun"
+                  color={shift === 'Morning' ? '#FFFFFF' : '#818CF8'}
+                  size={16}
+                />
+                <Text
+                  style={[
+                    styles.shiftBtnText,
+                    shift === 'Morning' && styles.shiftBtnTextActive
+                  ]}
                 >
-                  <Text style={[styles.quickChipText, isSelected && styles.quickChipTextActive]}>
-                    {val} kg
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
+                  Morning
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                activeOpacity={0.8}
+                style={[
+                  styles.shiftBtn,
+                  shift === 'Evening' && styles.shiftBtnActive
+                ]}
+                onPress={() => setShift('Evening')}
+              >
+                <AddIcon
+                  type="moon"
+                  color={shift === 'Evening' ? '#FFFFFF' : '#818CF8'}
+                  size={16}
+                />
+                <Text
+                  style={[
+                    styles.shiftBtnText,
+                    shift === 'Evening' && styles.shiftBtnTextActive
+                  ]}
+                >
+                  Evening
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
 
-        {/* Note / Remarks */}
-        <View style={styles.card}>
-          <Text style={styles.label}>Note / Remarks (Optional)</Text>
-          <TextInput
-            style={styles.noteInput}
-            value={note}
-            onChangeText={setNote}
-            placeholder="e.g., extra buffalo milk, cash paid, etc."
-            placeholderTextColor={colors.textMuted}
-          />
-        </View>
+          {/* 3. Quantity Stepper & Quick Presets */}
+          <View style={styles.formGroup}>
+            <View style={styles.fieldLabelRow}>
+              <AddIcon type="droplet" color="#818CF8" size={14} />
+              <Text style={styles.fieldLabel}>QUANTITY (KG)</Text>
+            </View>
 
-        {/* Save Button */}
-        <TouchableOpacity
-          activeOpacity={0.85}
-          style={[styles.saveBtn, isSaved && styles.saveBtnSuccess]}
-          onPress={handleSubmit}
-        >
-          <Text style={styles.saveBtnText}>
-            {isSaved ? '✓ Saved Successfully!' : 'Save Delivery Entry'}
-          </Text>
-        </TouchableOpacity>
-      </ScrollView>
+            {/* Glowing Circular Stepper */}
+            <View style={styles.stepperContainer}>
+              <TouchableOpacity
+                activeOpacity={0.7}
+                style={styles.stepperAdjustBtn}
+                onPress={() => adjustQuantity(-0.5)}
+              >
+                <Text style={styles.stepperAdjustBtnText}>−</Text>
+              </TouchableOpacity>
+
+              <View style={styles.qtyValueCircle}>
+                <Text style={styles.qtyNumber}>
+                  {parseFloat(quantity || 0).toFixed(1)}
+                </Text>
+                <Text style={styles.qtyUnit}>kg</Text>
+              </View>
+
+              <TouchableOpacity
+                activeOpacity={0.7}
+                style={styles.stepperAdjustBtn}
+                onPress={() => adjustQuantity(0.5)}
+              >
+                <Text style={styles.stepperAdjustBtnText}>+</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Quick Presets Grid (4 columns) */}
+            <View style={styles.quickGrid}>
+              {quickBtns.map((val) => {
+                const isSelected = Math.abs(parseFloat(quantity || 0) - val) < 0.05;
+                return (
+                  <TouchableOpacity
+                    key={val}
+                    activeOpacity={0.8}
+                    style={[
+                      styles.quickBtn,
+                      isSelected && styles.quickBtnActive
+                    ]}
+                    onPress={() => handleQuickSelect(val)}
+                  >
+                    <Text
+                      style={[
+                        styles.quickBtnText,
+                        isSelected && styles.quickBtnTextActive
+                      ]}
+                    >
+                      {val} kg
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+
+          {/* 4. Notes Input */}
+          <View style={styles.formGroup}>
+            <View style={styles.fieldLabelRow}>
+              <AddIcon type="notes" color="#818CF8" size={14} />
+              <Text style={styles.fieldLabel}>NOTES (OPTIONAL)</Text>
+            </View>
+
+            <TextInput
+              style={styles.textInput}
+              value={note}
+              onChangeText={setNote}
+              placeholder="e.g. morning, afternoon, extra curd..."
+              placeholderTextColor="rgba(255, 255, 255, 0.3)"
+              maxLength={40}
+            />
+          </View>
+
+          {/* 5. Save Button */}
+          <TouchableOpacity
+            activeOpacity={0.85}
+            style={[styles.saveBtn, saved && styles.saveBtnSuccess]}
+            onPress={handleSubmit}
+            disabled={saved}
+          >
+            {saved ? (
+              <>
+                <AddIcon type="check" color="#FFFFFF" size={18} />
+                <Text style={styles.saveBtnText}>Saved!</Text>
+              </>
+            ) : (
+              <>
+                <AddIcon type="save" color="#FFFFFF" size={18} />
+                <Text style={styles.saveBtnText}>Save Log</Text>
+              </>
+            )}
+          </TouchableOpacity>
+        </ScrollView>
+      </View>
     </KeyboardAvoidingView>
   );
 }
@@ -237,210 +407,244 @@ export default function AddEntryScreen({
 const styles = StyleSheet.create({
   keyboardContainer: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: '#0C0F1A',
+    ...(Platform.OS === 'web' && {
+      backgroundImage: 'linear-gradient(135deg, #0C0F1A 0%, #1a1040 40%, #0C0F1A 100%)',
+    }),
+  },
+  topHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingTop: 18,
+    paddingBottom: 14,
+  },
+  backBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(99, 102, 241, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...(Platform.OS === 'web' && {
+      cursor: 'pointer',
+    }),
+  },
+  topHeaderTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    letterSpacing: -0.3,
+  },
+  scrollView: {
+    flex: 1,
   },
   content: {
-    padding: spacing.lg,
+    paddingHorizontal: 16,
+    paddingTop: 4,
     paddingBottom: 120,
   },
   pageTitle: {
-    fontSize: 24,
-    fontWeight: typography.fontWeights.bold,
-    color: colors.text,
-    marginTop: spacing.sm,
+    fontSize: 30,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    letterSpacing: -0.5,
+    marginTop: 6,
+    marginBottom: 20,
   },
-  pageSubtitle: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    marginBottom: spacing.lg,
+
+  // Form Groups
+  formGroup: {
+    marginBottom: 20,
   },
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.cardBorder,
-    marginBottom: spacing.md,
-  },
-  label: {
-    fontSize: 13,
-    fontWeight: typography.fontWeights.semibold,
-    color: colors.textSecondary,
-    marginBottom: spacing.sm,
-  },
-  dateButtonsRow: {
+  fieldLabelRow: {
     flexDirection: 'row',
-    gap: 8,
-    marginBottom: spacing.sm,
-  },
-  dateChip: {
-    flex: 1,
-    backgroundColor: colors.surfaceElevated,
-    paddingVertical: 10,
-    borderRadius: borderRadius.md,
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.cardBorder,
+    gap: 6,
+    marginBottom: 10,
   },
-  dateChipActive: {
-    backgroundColor: colors.primaryLight,
-    borderColor: colors.primary,
-  },
-  dateChipText: {
-    color: colors.textSecondary,
-    fontSize: 13,
-    fontWeight: typography.fontWeights.medium,
-  },
-  dateChipTextActive: {
-    color: colors.primary,
-    fontWeight: typography.fontWeights.bold,
-  },
-  dateInputWrapper: {
-    marginTop: 4,
-  },
-  dateInputLabel: {
-    color: colors.textMuted,
+  fieldLabel: {
     fontSize: 11,
-    marginBottom: 4,
+    fontWeight: '700',
+    color: 'rgba(255, 255, 255, 0.5)',
+    letterSpacing: 1,
   },
-  dateInput: {
-    backgroundColor: colors.inputBg,
-    color: colors.text,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: borderRadius.sm,
+  textInput: {
+    backgroundColor: 'rgba(22, 27, 46, 0.8)',
     borderWidth: 1,
-    borderColor: colors.inputBorder,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    height: 48,
     fontSize: 14,
+    fontWeight: '500',
+    color: '#FFFFFF',
   },
+
+  // Shift Row (Morning / Evening)
   shiftRow: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 10,
   },
   shiftBtn: {
     flex: 1,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: 'rgba(22, 27, 46, 0.8)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.surfaceElevated,
-    paddingVertical: 12,
-    borderRadius: borderRadius.md,
-    borderWidth: 1,
-    borderColor: colors.cardBorder,
     gap: 8,
+    ...(Platform.OS === 'web' && {
+      cursor: 'pointer',
+      transition: 'all 0.2s ease',
+    }),
   },
   shiftBtnActive: {
-    backgroundColor: colors.primaryLight,
-    borderColor: colors.primary,
+    backgroundColor: '#6366F1',
+    borderColor: 'transparent',
+    ...(Platform.OS === 'web' && {
+      backgroundImage: 'linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)',
+      boxShadow: '0 4px 14px rgba(99, 102, 241, 0.35)',
+    }),
   },
-  shiftEmoji: {
-    fontSize: 18,
-  },
-  shiftText: {
-    color: colors.textSecondary,
+  shiftBtnText: {
     fontSize: 14,
-    fontWeight: typography.fontWeights.medium,
+    fontWeight: '600',
+    color: 'rgba(255, 255, 255, 0.65)',
   },
-  shiftTextActive: {
-    color: colors.primary,
-    fontWeight: typography.fontWeights.bold,
+  shiftBtnTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '700',
   },
-  stepperRow: {
+
+  // Stepper & Circle
+  stepperContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: spacing.md,
+    justifyContent: 'center',
+    gap: 20,
+    marginBottom: 16,
+    marginTop: 4,
   },
-  stepBtn: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: colors.surfaceElevated,
+  stepperAdjustBtn: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(22, 27, 46, 0.8)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.cardBorder,
+    ...(Platform.OS === 'web' && {
+      cursor: 'pointer',
+      transition: 'all 0.15s ease',
+    }),
   },
-  stepBtnText: {
-    color: colors.primary,
-    fontSize: 18,
-    fontWeight: typography.fontWeights.bold,
+  stepperAdjustBtnText: {
+    color: '#818CF8',
+    fontSize: 24,
+    fontWeight: '700',
+    lineHeight: 26,
   },
-  qtyDisplay: {
+  qtyValueCircle: {
+    width: 104,
+    height: 104,
+    borderRadius: 52,
+    backgroundColor: '#8B5CF6',
+    ...(Platform.OS === 'web' && {
+      backgroundImage: 'linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%)',
+      boxShadow: '0 8px 24px rgba(99, 102, 241, 0.35)',
+    }),
     alignItems: 'center',
     justifyContent: 'center',
   },
-  qtyInput: {
-    color: colors.text,
-    fontSize: 42,
-    fontWeight: typography.fontWeights.extraBold,
-    textAlign: 'center',
-    minWidth: 100,
+  qtyNumber: {
+    fontFamily: Platform.OS === 'web' ? 'Outfit, sans-serif' : undefined,
+    fontSize: 32,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    lineHeight: 34,
   },
   qtyUnit: {
-    color: colors.textSecondary,
-    fontSize: 13,
-    marginTop: -4,
+    fontSize: 11,
+    fontWeight: '700',
+    color: 'rgba(255, 255, 255, 0.85)',
+    marginTop: 2,
+    letterSpacing: 0.5,
   },
-  quickChipsRow: {
+
+  // Quick Add Grid
+  quickGrid: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     gap: 8,
   },
-  quickChip: {
+  quickBtn: {
     flex: 1,
-    backgroundColor: colors.surfaceElevated,
-    paddingVertical: 8,
-    borderRadius: borderRadius.sm,
-    alignItems: 'center',
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(22, 27, 46, 0.8)',
     borderWidth: 1,
-    borderColor: colors.cardBorder,
-  },
-  quickChipActive: {
-    backgroundColor: colors.primaryLight,
-    borderColor: colors.primary,
-  },
-  quickChipText: {
-    color: colors.textSecondary,
-    fontSize: 13,
-    fontWeight: typography.fontWeights.semibold,
-  },
-  quickChipTextActive: {
-    color: colors.primary,
-  },
-  noteInput: {
-    backgroundColor: colors.inputBg,
-    color: colors.text,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: borderRadius.sm,
-    borderWidth: 1,
-    borderColor: colors.inputBorder,
-    fontSize: 14,
-  },
-  saveBtn: {
-    backgroundColor: colors.primary,
-    paddingVertical: 16,
-    borderRadius: borderRadius.lg,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: spacing.sm,
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
+    ...(Platform.OS === 'web' && {
+      cursor: 'pointer',
+      transition: 'all 0.2s ease',
+    }),
+  },
+  quickBtnActive: {
+    backgroundColor: '#6366F1',
+    borderColor: 'transparent',
+    ...(Platform.OS === 'web' && {
+      backgroundImage: 'linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)',
+      boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)',
+    }),
+  },
+  quickBtnText: {
+    color: '#C7D2FE',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  quickBtnTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+  },
+
+  // Save Button
+  saveBtn: {
+    height: 50,
+    borderRadius: 14,
+    backgroundColor: '#6366F1',
+    ...(Platform.OS === 'web' && {
+      backgroundImage: 'linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)',
+      boxShadow: '0 4px 16px rgba(99, 102, 241, 0.35)',
+      cursor: 'pointer',
+    }),
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: 6,
   },
   saveBtnSuccess: {
-    backgroundColor: colors.success,
+    backgroundColor: '#10B981',
+    ...(Platform.OS === 'web' && {
+      backgroundImage: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+      boxShadow: '0 4px 16px rgba(16, 185, 129, 0.35)',
+    }),
   },
   saveBtnText: {
     color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: typography.fontWeights.bold,
+    fontSize: 15,
+    fontWeight: '700',
   },
 });
