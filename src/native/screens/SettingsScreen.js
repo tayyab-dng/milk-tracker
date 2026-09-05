@@ -263,17 +263,11 @@ export default function SettingsScreen({
 
   return (
     <View style={styles.container}>
-      {/* Top Header Area - Preserving Top Spacing as Empty Space */}
-      <View style={styles.topSpacer} />
-
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        {/* Large Page Title */}
-        <Text style={styles.pageTitle}>Settings</Text>
-
         {/* 1. Profile Section Card */}
         <View style={styles.card}>
           <View style={styles.profileRow}>
@@ -508,24 +502,13 @@ const styles = StyleSheet.create({
       backgroundImage: 'linear-gradient(135deg, #0C0F1A 0%, #1a1040 40%, #0C0F1A 100%)',
     }),
   },
-  topSpacer: {
-    height: 60,
-  },
   scrollView: {
     flex: 1,
   },
   content: {
     paddingHorizontal: 16,
-    paddingTop: 4,
+    paddingTop: 24,
     paddingBottom: 120,
-  },
-  pageTitle: {
-    fontSize: 32,
-    fontWeight: '800',
-    color: '#FFFFFF',
-    letterSpacing: -0.5,
-    marginTop: 6,
-    marginBottom: 16,
   },
 
   // Cards
