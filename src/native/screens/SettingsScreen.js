@@ -38,34 +38,14 @@ export default function SettingsScreen({
   const currencies = ['PKR', 'Rs.', '$', '€', '£'];
 
   const handleSaveSettings = () => {
-    const rateNum = parseFloat(defaultRate);
-    const qtyNum = parseFloat(defaultQuantity);
-
-    if (isNaN(rateNum) || rateNum < 0) {
-      Alert.alert('Invalid Rate', 'Please enter a valid numeric default rate.');
-      return;
-    }
-    if (isNaN(qtyNum) || qtyNum <= 0) {
-      Alert.alert('Invalid Quantity', 'Please enter a valid numeric default quantity.');
-      return;
-    }
-
-    const quickQuantities = quickQuantitiesText
-      .split(',')
-      .map(item => parseFloat(item.trim()))
-      .filter(num => !isNaN(num) && num > 0);
-
-    if (quickQuantities.length === 0) {
-      Alert.alert('Invalid Presets', 'Please enter at least one valid preset quantity (e.g. 0.5, 1, 2).');
+    if (!supplierName.trim()) {
+      Alert.alert('Invalid Supplier', 'Please enter a valid supplier name.');
       return;
     }
 
     onUpdateSettings({
-      supplierName: supplierName.trim(),
-      defaultRate: rateNum,
-      currency: currency.trim(),
-      defaultQuantity: qtyNum,
-      quickQuantities
+      ...settings,
+      supplierName: supplierName.trim()
     });
 
     showToast('Settings saved successfully! ⚙️');
@@ -145,55 +125,6 @@ export default function SettingsScreen({
           placeholderTextColor={colors.textMuted}
         />
 
-        <Text style={styles.fieldLabel}>Default Rate (per kg/liter)</Text>
-        <TextInput
-          style={styles.input}
-          value={defaultRate}
-          onChangeText={setDefaultRate}
-          keyboardType="numeric"
-          placeholder="60"
-          placeholderTextColor={colors.textMuted}
-        />
-
-        <Text style={styles.fieldLabel}>Currency Symbol</Text>
-        <View style={styles.currencyRow}>
-          {currencies.map((sym) => (
-            <TouchableOpacity
-              key={sym}
-              activeOpacity={0.8}
-              style={[styles.currencyChip, currency === sym && styles.currencyChipActive]}
-              onPress={() => setCurrency(sym)}
-            >
-              <Text style={[styles.currencyChipText, currency === sym && styles.currencyChipTextActive]}>
-                {sym}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-
-      {/* Defaults & Shortcuts */}
-      <View style={styles.card}>
-        <Text style={styles.sectionHeading}>Delivery Defaults</Text>
-
-        <Text style={styles.fieldLabel}>Default Daily Quantity (kg/L)</Text>
-        <TextInput
-          style={styles.input}
-          value={defaultQuantity}
-          onChangeText={setDefaultQuantity}
-          keyboardType="numeric"
-          placeholder="1.0"
-          placeholderTextColor={colors.textMuted}
-        />
-
-        <Text style={styles.fieldLabel}>Quick Add Buttons (comma separated)</Text>
-        <TextInput
-          style={styles.input}
-          value={quickQuantitiesText}
-          onChangeText={setQuickQuantitiesText}
-          placeholder="0.5, 1.0, 1.5, 2.0"
-          placeholderTextColor={colors.textMuted}
-        />
       </View>
 
       {/* Save Settings Button */}

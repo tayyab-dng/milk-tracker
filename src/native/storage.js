@@ -9,11 +9,31 @@ try {
 
 const memoryStore = new Map();
 
+function getWebStorage() {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      return window.localStorage;
+    }
+    if (typeof globalThis !== 'undefined' && globalThis.localStorage) {
+      return globalThis.localStorage;
+    }
+  } catch {
+    // Ignore restricted environments
+  }
+  return null;
+}
+
 export const Storage = {
   async getItem(key) {
     try {
+      const webStorage = getWebStorage();
+      if (webStorage) {
+        const val = webStorage.getItem(key);
+        if (val !== null) return val;
+      }
       if (AsyncStorageModule) {
-        return await AsyncStorageModule.getItem(key);
+        const val = await AsyncStorageModule.getItem(key);
+        if (val !== null) return val;
       }
       return memoryStore.has(key) ? memoryStore.get(key) : null;
     } catch (err) {
@@ -24,6 +44,10 @@ export const Storage = {
 
   async setItem(key, value) {
     try {
+      const webStorage = getWebStorage();
+      if (webStorage) {
+        webStorage.setItem(key, value);
+      }
       if (AsyncStorageModule) {
         await AsyncStorageModule.setItem(key, value);
       }
@@ -36,6 +60,10 @@ export const Storage = {
 
   async removeItem(key) {
     try {
+      const webStorage = getWebStorage();
+      if (webStorage) {
+        webStorage.removeItem(key);
+      }
       if (AsyncStorageModule) {
         await AsyncStorageModule.removeItem(key);
       }

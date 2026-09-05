@@ -22,37 +22,14 @@ export default function Settings({ settings, onUpdateSettings, onImportData, onR
 
   const handleSave = (e) => {
     e.preventDefault();
-    
-    // Parse quick quantities
-    const quickQuantities = quickQuantitiesText
-      .split(',')
-      .map(item => parseFloat(item.trim()))
-      .filter(num => !isNaN(num) && num > 0);
-
-    if (quickQuantities.length === 0) {
-      showToast("Please enter at least one valid number for Quick Add options.");
-      return;
-    }
-
-    const rateNum = parseFloat(defaultRate);
-    const qtyNum = parseFloat(defaultQuantity);
-
-    if (isNaN(rateNum) || rateNum < 0) {
-      showToast("Please enter a valid default rate.");
-      return;
-    }
-
-    if (isNaN(qtyNum) || qtyNum <= 0) {
-      showToast("Please enter a valid default quantity.");
+    if (!supplierName.trim()) {
+      showToast("Please enter a valid supplier name.");
       return;
     }
 
     onUpdateSettings({
-      supplierName: supplierName.trim(),
-      defaultRate: rateNum,
-      currency: currency.trim(),
-      defaultQuantity: qtyNum,
-      quickQuantities
+      ...settings,
+      supplierName: supplierName.trim()
     });
 
     showToast("Settings saved successfully! ⚙️");
@@ -303,91 +280,11 @@ export default function Settings({ settings, onUpdateSettings, onImportData, onR
               onChange={(e) => setSupplierName(e.target.value)}
               required
               maxLength="25"
-              placeholder="e.g. Ram, Sharma Ji..."
+              placeholder="e.g. Supplier name..."
             />
           </div>
 
-          {/* Currency Symbol */}
-          <div className="form-group">
-            <label className="form-label" htmlFor="setting-currency">Currency Symbol</label>
-            <input 
-              type="text" 
-              id="setting-currency"
-              className="form-control"
-              value={currency}
-              onChange={(e) => setCurrency(e.target.value)}
-              required
-              maxLength="5"
-              placeholder="e.g. PKR, Rs."
-            />
-            <div style={{ display: 'flex', gap: '8px', marginTop: '8px', flexWrap: 'wrap' }}>
-              {['PKR', 'Rs.', '$', '€', '£'].map(c => (
-                <button
-                  key={c}
-                  type="button"
-                  onClick={() => setCurrency(c)}
-                  style={{
-                    padding: '5px 12px',
-                    fontSize: '0.78rem',
-                    fontWeight: '600',
-                    borderRadius: 'var(--radius-full)',
-                    border: currency === c ? '1.5px solid var(--primary)' : '1px solid var(--border)',
-                    background: currency === c ? 'var(--primary-light)' : 'var(--bg-card-alt)',
-                    color: currency === c ? 'var(--primary)' : 'var(--text-muted)',
-                    cursor: 'pointer',
-                    transition: 'all 0.15s ease'
-                  }}
-                >
-                  {c}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Default Rate */}
-          <div className="form-group">
-            <label className="form-label" htmlFor="setting-rate">Default Rate per kg</label>
-            <input 
-              type="number" 
-              step="0.01"
-              min="0"
-              id="setting-rate"
-              className="form-control"
-              value={defaultRate}
-              onChange={(e) => setDefaultRate(e.target.value)}
-              required
-            />
-          </div>
-
-          {/* Default Quantity */}
-          <div className="form-group">
-            <label className="form-label" htmlFor="setting-qty">Default Daily Quantity (kg)</label>
-            <input 
-              type="number" 
-              step="0.1"
-              min="0.1"
-              id="setting-qty"
-              className="form-control"
-              value={defaultQuantity}
-              onChange={(e) => setDefaultQuantity(e.target.value)}
-              required
-            />
-          </div>
-
-          {/* Quick Add Presets */}
-          <div className="form-group">
-            <label className="form-label" htmlFor="setting-presets">Quick Add Buttons (kg, comma-separated)</label>
-            <input 
-              type="text" 
-              id="setting-presets"
-              className="form-control"
-              value={quickQuantitiesText}
-              onChange={(e) => setQuickQuantitiesText(e.target.value)}
-              required
-            />
-          </div>
-
-          <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '13px' }}>
+          <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '13px', marginTop: '4px' }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
               <polyline points="17 21 17 13 7 13 7 21"></polyline>

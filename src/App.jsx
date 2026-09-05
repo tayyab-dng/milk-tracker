@@ -212,35 +212,26 @@ function MainApp({ userId }) {
         <button className="toast-close" onClick={() => setToastShow(false)}>×</button>
       </div>
 
-      {/* App Header */}
-      <header className="app-header">
-        <div>
-          <h1 className="app-title">
-            <span className="milk-icon">
-              <svg viewBox="0 0 24 24" width="28" height="28" fill="none">
-                <defs>
-                  <linearGradient id="dropGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#818CF8"/>
-                    <stop offset="100%" stopColor="#6366F1"/>
-                  </linearGradient>
-                </defs>
-                <path d="M12 2C12 2 6 10 6 14.5C6 17.8 8.7 21 12 21C15.3 21 18 17.8 18 14.5C18 10 12 2 12 2Z" fill="url(#dropGrad)" />
-                <ellipse cx="10" cy="13" rx="2" ry="3" fill="white" opacity="0.3" transform="rotate(-15, 10, 13)"/>
-              </svg>
-            </span>
-            Milk Tracker
-          </h1>
-          <div className="header-subtitle">{todayLabel}</div>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: '600', letterSpacing: '0.5px' }}>
-            👋 {currentUser?.name || 'User'}
-          </span>
-        </div>
-      </header>
+      {/* Sub-Page Header (Only on Add, History, Settings) */}
+      {currentTab !== 'dashboard' && (
+        <header className="sub-page-header">
+          <button className="sub-header-back" onClick={() => setCurrentTab('dashboard')} aria-label="Back to Home">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+          </button>
+          <h2 className="sub-header-title">
+            {currentTab === 'add' && 'Add Daily Milk'}
+            {currentTab === 'history' && 'Delivery History'}
+            {currentTab === 'settings' && 'Settings'}
+          </h2>
+          <div style={{ width: '38px' }}></div>
+        </header>
+      )}
 
       {/* Main Content Area */}
       <main className="app-content">
+
         {currentTab === 'dashboard' && (
           <Dashboard 
             entries={entries}
@@ -257,37 +248,43 @@ function MainApp({ userId }) {
         )}
         
         {currentTab === 'add' && (
-          <AddEntry 
-            onAddEntry={addEntry}
-            settings={settings}
-            showToast={showToast}
-            setCurrentTab={setCurrentTab}
-          />
+          <div className="sub-page-body">
+            <AddEntry 
+              onAddEntry={addEntry}
+              settings={settings}
+              showToast={showToast}
+              setCurrentTab={setCurrentTab}
+            />
+          </div>
         )}
 
         {currentTab === 'history' && (
-          <HistoryList 
-            entries={entries}
-            onDeleteEntry={deleteEntry}
-            onUpdateEntry={updateEntry}
-            settings={settings}
-            currentMonth={currentMonth}
-            setCurrentMonth={setCurrentMonth}
-            monthlyRates={monthlyRates}
-            showToast={showToast}
-          />
+          <div className="sub-page-body">
+            <HistoryList 
+              entries={entries}
+              onDeleteEntry={deleteEntry}
+              onUpdateEntry={updateEntry}
+              settings={settings}
+              currentMonth={currentMonth}
+              setCurrentMonth={setCurrentMonth}
+              monthlyRates={monthlyRates}
+              showToast={showToast}
+            />
+          </div>
         )}
 
         {currentTab === 'settings' && (
-          <Settings 
-            settings={settings}
-            onUpdateSettings={updateSettings}
-            onImportData={importData}
-            onResetData={resetData}
-            entries={entries}
-            monthlyRates={monthlyRates}
-            showToast={showToast}
-          />
+          <div className="sub-page-body">
+            <Settings 
+              settings={settings}
+              onUpdateSettings={updateSettings}
+              onImportData={importData}
+              onResetData={resetData}
+              entries={entries}
+              monthlyRates={monthlyRates}
+              showToast={showToast}
+            />
+          </div>
         )}
       </main>
 

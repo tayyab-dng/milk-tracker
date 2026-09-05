@@ -100,55 +100,75 @@ export default function DashboardScreen({
     .sort((a, b) => new Date(b.date) - new Date(a.date))
     .slice(0, 3);
 
+    const userName = settings.userName || 'Tayyab Safdar';
+    const initials = userName
+      .split(' ')
+      .filter(Boolean)
+      .map(n => n[0])
+      .join('')
+      .slice(0, 2)
+      .toUpperCase() || 'TS';
+
+    const todayLabel = new Date().toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric'
+    });
+
   return (
     <ScrollView
       style={styles.container}
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >
-      {/* Top Header */}
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.appTitle}>Milk Tracker 🥛</Text>
-          <Text style={styles.subtitle}>
-            Supplier: <Text style={styles.supplierHighlight}>{settings.supplierName || 'Supplier'}</Text>
-          </Text>
+      {/* Curved Hero Header: Profile + Month Selector + Merged Bill Card */}
+      <View style={styles.heroHeaderContainer}>
+        {/* Profile Row */}
+        <View style={styles.heroProfileRow}>
+          <View>
+            <Text style={styles.heroGreeting}>Welcome back,</Text>
+            <Text style={styles.heroUserName}>{userName}</Text>
+          </View>
+          <TouchableOpacity 
+            style={styles.heroAvatar} 
+            activeOpacity={0.8}
+            onPress={() => setCurrentTab && setCurrentTab('settings')}
+          >
+            <Text style={styles.heroAvatarText}>{initials}</Text>
+            <View style={styles.heroAvatarDot} />
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity
-          activeOpacity={0.8}
-          style={styles.shareBtn}
-          onPress={handleShareReport}
-        >
-          <Text style={styles.shareBtnText}>Share 📤</Text>
-        </TouchableOpacity>
-      </View>
 
-      {/* Month Navigator */}
-      <View style={styles.monthSelector}>
-        <TouchableOpacity
-          activeOpacity={0.7}
-          style={styles.monthArrow}
-          onPress={() => changeMonth(-1)}
-        >
-          <Text style={styles.arrowText}>◀</Text>
-        </TouchableOpacity>
-        <View style={styles.monthLabelContainer}>
-          <Text style={styles.monthText}>{getMonthLabel(currentMonth)}</Text>
-          <Text style={styles.monthSubtext}>{daysLogged} of {daysInMonth} days logged</Text>
+        {/* Integrated Month Navigator */}
+        <View style={styles.heroMonthSelector}>
+          <TouchableOpacity
+            activeOpacity={0.7}
+            style={styles.heroMonthArrow}
+            onPress={() => changeMonth(-1)}
+          >
+            <Text style={styles.heroArrowText}>◀</Text>
+          </TouchableOpacity>
+          <View style={styles.heroMonthLabelContainer}>
+            <Text style={styles.heroMonthText}>{getMonthLabel(currentMonth)}</Text>
+            <Text style={styles.heroMonthSubtext}>{daysLogged} of {daysInMonth} days logged</Text>
+          </View>
+          <TouchableOpacity
+            activeOpacity={0.7}
+            style={styles.heroMonthArrow}
+            onPress={() => changeMonth(1)}
+          >
+            <Text style={styles.heroArrowText}>▶</Text>
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity
-          activeOpacity={0.7}
-          style={styles.monthArrow}
-          onPress={() => changeMonth(1)}
-        >
-          <Text style={styles.arrowText}>▶</Text>
-        </TouchableOpacity>
-      </View>
 
-      {/* Main Bill Hero Card */}
-      <View style={styles.heroCard}>
-        <View style={styles.heroHeader}>
-          <Text style={styles.heroLabel}>TOTAL BILL</Text>
+        {/* Bill Row & Paid Status */}
+        <View style={styles.heroBillRow}>
+          <View>
+            <Text style={styles.heroBillLabel}>ESTIMATED BILL</Text>
+            <Text style={styles.heroBillAmount}>
+              {settings.currency}{totalBill.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </Text>
+          </View>
           <TouchableOpacity
             activeOpacity={0.8}
             style={[styles.statusBadge, isPaid ? styles.statusPaid : styles.statusUnpaid]}
@@ -159,122 +179,90 @@ export default function DashboardScreen({
             </Text>
           </TouchableOpacity>
         </View>
-        <Text style={styles.heroAmount}>
-          {settings.currency}{totalBill.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-        </Text>
-        <Text style={styles.heroSubtext}>
-          Tap badge to mark as {isPaid ? 'Unpaid' : 'Paid'}
-        </Text>
-      </View>
 
-      {/* Stats Grid */}
-      <View style={styles.statsGrid}>
-        {/* Total Quantity */}
-        <View style={styles.statCard}>
-          <Text style={styles.statIcon}>📦</Text>
-          <Text style={styles.statLabel}>Total Delivered</Text>
-          <Text style={styles.statValue}>
-            {totalKg.toFixed(1)} <Text style={styles.unitText}>kg</Text>
-          </Text>
-        </View>
-
-        {/* Daily Average */}
-        <View style={styles.statCard}>
-          <Text style={styles.statIcon}>📊</Text>
-          <Text style={styles.statLabel}>Daily Average</Text>
-          <Text style={styles.statValue}>
-            {avgDaily} <Text style={styles.unitText}>kg/day</Text>
-          </Text>
-        </View>
-
-        {/* Current Rate */}
-        <View style={[styles.statCard, styles.rateCard]}>
-          <View style={styles.rateHeader}>
-            <Text style={styles.statLabel}>Monthly Rate</Text>
-            {!isEditingRate && (
-              <TouchableOpacity
-                onPress={() => {
-                  setTempRate(rate.toString());
-                  setIsEditingRate(true);
-                }}
-              >
-                <Text style={styles.editLink}>Edit ✎</Text>
-              </TouchableOpacity>
-            )}
+        {/* Stats Row: Total Milk & Rate */}
+        <View style={styles.heroStatsRow}>
+          <View style={styles.heroStatGlass}>
+            <Text style={styles.heroStatLabel}>TOTAL MILK</Text>
+            <Text style={styles.heroStatValue}>{totalKg.toFixed(1)} <Text style={styles.heroStatUnit}>kg</Text></Text>
           </View>
-          {isEditingRate ? (
-            <View style={styles.editRateRow}>
-              <TextInput
-                style={styles.rateInput}
-                value={tempRate}
-                onChangeText={setTempRate}
-                keyboardType="numeric"
-                autoFocus
-              />
-              <TouchableOpacity style={styles.saveRateBtn} onPress={handleRateSubmit}>
-                <Text style={styles.saveRateBtnText}>✓</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.cancelRateBtn}
-                onPress={() => setIsEditingRate(false)}
-              >
-                <Text style={styles.cancelRateBtnText}>✕</Text>
-              </TouchableOpacity>
-            </View>
-          ) : (
-            <Text style={styles.statValue}>
-              {settings.currency}{rate} <Text style={styles.unitText}>/kg</Text>
-            </Text>
-          )}
+          <TouchableOpacity 
+            style={styles.heroStatGlass}
+            activeOpacity={0.7}
+            onPress={() => {
+              setTempRate(rate.toString());
+              setIsEditingRate(true);
+            }}
+          >
+            <Text style={styles.heroStatLabel}>RATE / KG</Text>
+            <Text style={styles.heroStatValue}>{settings.currency}{rate} ✎</Text>
+          </TouchableOpacity>
         </View>
       </View>
 
-      {/* Quick Action: Log Milk */}
-      <TouchableOpacity
-        activeOpacity={0.85}
-        style={styles.quickAddBtn}
-        onPress={() => setCurrentTab('add')}
-      >
-        <Text style={styles.quickAddBtnText}>+ Log Today's Milk</Text>
-      </TouchableOpacity>
+      {/* Daily Insight / Monthly Overview Card */}
+      <View style={styles.dailyInsightCard}>
+        <View style={styles.insightHeader}>
+          <Text style={styles.insightTitle}>Monthly Overview</Text>
+          <Text style={styles.insightIcon}>💡</Text>
+        </View>
+        <Text style={styles.insightText}>
+          {filteredEntries.length > 0
+            ? `${filteredEntries.length} deliveries logged (${totalKg.toFixed(1)} kg) in ${getMonthLabel(currentMonth)}. Supplier: ${settings.supplierName || 'Supplier'}.`
+            : `No deliveries logged yet for ${getMonthLabel(currentMonth)}. Tap "Add Milk" below to start tracking.`}
+        </Text>
+      </View>
 
-      {/* Recent Activity Section */}
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Recent Deliveries</Text>
-        <TouchableOpacity onPress={() => setCurrentTab('history')}>
-          <Text style={styles.viewAllText}>View All →</Text>
+      {/* Quick Action Cards: All Logs & Share Bill */}
+      <View style={styles.featuresGrid}>
+        <TouchableOpacity 
+          style={[styles.featureCard, styles.featureCardBlue]}
+          activeOpacity={0.7}
+          onPress={() => setCurrentTab && setCurrentTab('history')}
+        >
+          <View style={[styles.featureIconBubble, styles.bubbleBlue]}>
+            <Text style={styles.featureIconText}>📋</Text>
+          </View>
+          <Text style={styles.featureTitle}>All Logs</Text>
+          <Text style={styles.featureSubtitle}>{filteredEntries.length} records this mo.</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={[styles.featureCard, styles.featureCardGreen]}
+          activeOpacity={0.7}
+          onPress={handleShareReport}
+        >
+          <View style={[styles.featureIconBubble, styles.bubbleGreen]}>
+            <Text style={styles.featureIconText}>📤</Text>
+          </View>
+          <Text style={styles.featureTitle}>Share Bill</Text>
+          <Text style={styles.featureSubtitle}>WhatsApp & SMS</Text>
         </TouchableOpacity>
       </View>
 
-      {recentEntries.length === 0 ? (
-        <View style={styles.emptyCard}>
-          <Text style={styles.emptyIcon}>🥛</Text>
-          <Text style={styles.emptyTitle}>No entries this month yet</Text>
-          <Text style={styles.emptyDesc}>Tap the button above to log your first delivery.</Text>
+      {/* Month Progress Card */}
+      <View style={styles.progressCard}>
+        <View style={styles.progressHeader}>
+          <Text style={styles.progressTitle}>Month Progress</Text>
         </View>
-      ) : (
-        recentEntries.map((entry) => (
-          <View key={entry.id} style={styles.entryRow}>
-            <View style={styles.entryDateBlock}>
-              <Text style={styles.entryDay}>
-                {new Date(entry.date).toLocaleDateString('en-US', { day: '2-digit' })}
-              </Text>
-              <Text style={styles.entryMonth}>
-                {new Date(entry.date).toLocaleDateString('en-US', { month: 'short' })}
-              </Text>
-            </View>
-            <View style={styles.entryDetails}>
-              <Text style={styles.entryQty}>{entry.quantity} kg</Text>
-              <Text style={styles.entryNote}>
-                {entry.note ? entry.note : (entry.shift ? `${entry.shift} Delivery` : 'Regular delivery')}
-              </Text>
-            </View>
-            <Text style={styles.entryCost}>
-              {settings.currency}{(parseFloat(entry.quantity) * rate).toFixed(0)}
+        <View style={styles.progressRow}>
+          <View>
+            <Text style={styles.miniStatLabel}>DELIVERIES</Text>
+            <Text style={styles.miniStatValue}>
+              {filteredEntries.length} <Text style={styles.miniStatUnit}>/ {daysInMonth} days</Text>
             </Text>
           </View>
-        ))
-      )}
+          <View style={{ alignItems: 'flex-end' }}>
+            <Text style={styles.miniStatLabel}>DAILY AVG</Text>
+            <Text style={styles.miniStatValue}>
+              {avgDaily} <Text style={styles.miniStatUnit}>kg</Text>
+            </Text>
+          </View>
+        </View>
+        <View style={styles.progressBarTrack}>
+          <View style={[styles.progressBarFill, { width: `${Math.min((filteredEntries.length / daysInMonth) * 100, 100)}%` }]} />
+        </View>
+      </View>
     </ScrollView>
   );
 }
@@ -288,6 +276,250 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     paddingBottom: 110,
   },
+  // Curved Hero Header
+  heroHeaderContainer: {
+    backgroundColor: '#1E1B4B',
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
+    paddingHorizontal: 20,
+    paddingTop: 24,
+    paddingBottom: 22,
+    marginHorizontal: -spacing.lg,
+    marginTop: -spacing.lg,
+    marginBottom: spacing.lg,
+    borderBottomWidth: 1.5,
+    borderBottomColor: 'rgba(129, 140, 248, 0.25)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.35,
+    shadowRadius: 18,
+    elevation: 8,
+  },
+  heroMonthSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: 'rgba(0, 0, 0, 0.25)',
+    borderRadius: 24,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    marginVertical: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.16)',
+  },
+  heroMonthArrow: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  heroArrowText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: typography.fontWeights.bold,
+  },
+  heroMonthLabelContainer: {
+    alignItems: 'center',
+  },
+  heroMonthText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: typography.fontWeights.bold,
+  },
+  heroMonthSubtext: {
+    color: 'rgba(255, 255, 255, 0.7)',
+    fontSize: 11,
+  },
+  heroBillRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 14,
+  },
+  heroBillLabel: {
+    color: 'rgba(255, 255, 255, 0.75)',
+    fontSize: 11,
+    fontWeight: typography.fontWeights.bold,
+    letterSpacing: 0.8,
+  },
+  heroBillAmount: {
+    color: '#FFFFFF',
+    fontSize: 30,
+    fontWeight: typography.fontWeights.extraBold,
+    letterSpacing: -0.5,
+    marginTop: 2,
+  },
+  heroStatsRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  heroStatGlass: {
+    flex: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    borderRadius: borderRadius.md,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.18)',
+  },
+  heroStatLabel: {
+    color: 'rgba(255, 255, 255, 0.75)',
+    fontSize: 10,
+    fontWeight: typography.fontWeights.bold,
+    letterSpacing: 0.5,
+  },
+  heroStatValue: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: typography.fontWeights.bold,
+    marginTop: 2,
+  },
+  heroStatUnit: {
+    fontSize: 11,
+    fontWeight: 'normal',
+    color: 'rgba(255, 255, 255, 0.75)',
+  },
+  heroProfileRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  heroGreeting: {
+    color: '#A5B4FC',
+    fontSize: 13,
+    fontWeight: typography.fontWeights.medium,
+    marginBottom: 2,
+  },
+  heroUserName: {
+    color: '#FFFFFF',
+    fontSize: 24,
+    fontWeight: typography.fontWeights.extraBold,
+    letterSpacing: -0.5,
+  },
+  heroAvatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2.5,
+    borderColor: '#FFFFFF',
+    position: 'relative',
+  },
+  heroAvatarText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: typography.fontWeights.bold,
+  },
+  heroAvatarDot: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: colors.success,
+    borderWidth: 2,
+    borderColor: '#1E1B4B',
+  },
+
+  // Daily Insight Card
+  dailyInsightCard: {
+    backgroundColor: colors.card,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.success,
+    borderWidth: 1,
+    borderColor: colors.cardBorder,
+  },
+  insightHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  insightTitle: {
+    color: colors.text,
+    fontSize: 14,
+    fontWeight: typography.fontWeights.bold,
+  },
+  insightIcon: {
+    fontSize: 16,
+  },
+  insightText: {
+    color: colors.textMuted,
+    fontSize: 12,
+    lineHeight: 17,
+  },
+
+  // 2x2 Feature Grid
+  featuresGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginBottom: spacing.md,
+  },
+  featureCard: {
+    width: '48%',
+    backgroundColor: colors.card,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.cardBorder,
+    borderLeftWidth: 4,
+    marginBottom: spacing.sm,
+  },
+  featureCardPurple: {
+    borderLeftColor: '#818CF8',
+  },
+  featureCardBlue: {
+    borderLeftColor: '#38BDF8',
+  },
+  featureCardAmber: {
+    borderLeftColor: '#F59E0B',
+  },
+  featureCardGreen: {
+    borderLeftColor: '#10B981',
+  },
+  featureIconBubble: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 6,
+  },
+  bubblePurple: {
+    backgroundColor: 'rgba(129, 140, 248, 0.15)',
+  },
+  bubbleBlue: {
+    backgroundColor: 'rgba(56, 189, 248, 0.15)',
+  },
+  bubbleAmber: {
+    backgroundColor: 'rgba(245, 158, 11, 0.15)',
+  },
+  bubbleGreen: {
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+  },
+  featureIconText: {
+    fontSize: 16,
+  },
+  featureTitle: {
+    color: colors.text,
+    fontSize: 14,
+    fontWeight: typography.fontWeights.bold,
+    marginBottom: 2,
+  },
+  featureSubtitle: {
+    color: colors.textMuted,
+    fontSize: 11,
+  },
+
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -322,6 +554,56 @@ const styles = StyleSheet.create({
     color: colors.primary,
     fontSize: 13,
     fontWeight: typography.fontWeights.semibold,
+  },
+  progressCard: {
+    backgroundColor: colors.card,
+    borderRadius: borderRadius.lg,
+    padding: spacing.lg,
+    marginBottom: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.cardBorder,
+  },
+  progressHeader: {
+    marginBottom: spacing.md,
+  },
+  progressTitle: {
+    color: colors.text,
+    fontSize: 15,
+    fontWeight: typography.fontWeights.bold,
+  },
+  progressRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  miniStatLabel: {
+    color: colors.textMuted,
+    fontSize: 10,
+    fontWeight: typography.fontWeights.bold,
+    letterSpacing: 0.5,
+    marginBottom: 2,
+  },
+  miniStatValue: {
+    color: colors.text,
+    fontSize: 16,
+    fontWeight: typography.fontWeights.extraBold,
+  },
+  miniStatUnit: {
+    fontSize: 11,
+    color: colors.textMuted,
+    fontWeight: 'normal',
+  },
+  progressBarTrack: {
+    height: 8,
+    backgroundColor: 'rgba(99, 102, 241, 0.15)',
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    backgroundColor: colors.primary,
+    borderRadius: 4,
   },
   monthSelector: {
     flexDirection: 'row',
@@ -381,25 +663,27 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   statusBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
     borderRadius: borderRadius.full,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 255, 255, 0.45)',
   },
   statusPaid: {
-    backgroundColor: colors.successLight,
+    backgroundColor: '#10B981',
   },
   statusUnpaid: {
-    backgroundColor: colors.warningLight,
+    backgroundColor: '#EF4444',
   },
   statusText: {
-    fontSize: 11,
-    fontWeight: typography.fontWeights.bold,
+    fontSize: 12,
+    fontWeight: typography.fontWeights.extraBold,
   },
   statusPaidText: {
-    color: colors.success,
+    color: '#FFFFFF',
   },
   statusUnpaidText: {
-    color: colors.warning,
+    color: '#FFFFFF',
   },
   heroAmount: {
     fontSize: 34,
