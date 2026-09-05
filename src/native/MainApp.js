@@ -136,6 +136,22 @@ export default function MainApp({ userId }) {
     showToast(newStatus ? `Marked ${month} as Paid! ✅` : `Marked ${month} as Unpaid ⏳`);
   }, [userId, monthlyStatus, monthlyRates, showToast]);
 
+  const handleImportData = useCallback(async (importedEntries, importedSettings, importedMonthlyRates) => {
+    if (Array.isArray(importedEntries)) {
+      setEntries(importedEntries);
+      for (const entry of importedEntries) {
+        await dataService.addOrUpdateEntry(userId, entry);
+      }
+    }
+    if (importedSettings) {
+      setSettings(importedSettings);
+      await dataService.saveSettings(userId, importedSettings);
+    }
+    if (importedMonthlyRates) {
+      setMonthlyRates(importedMonthlyRates);
+    }
+  }, [userId]);
+
   const handleResetData = useCallback(async () => {
     setEntries([]);
     setMonthlyRates({});
@@ -199,9 +215,11 @@ export default function MainApp({ userId }) {
             settings={settings}
             onUpdateSettings={handleUpdateSettings}
             onResetData={handleResetData}
+            onImportData={handleImportData}
             entries={entries}
             monthlyRates={monthlyRates}
             showToast={showToast}
+            setCurrentTab={setCurrentTab}
           />
         )}
       </View>
