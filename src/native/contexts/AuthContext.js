@@ -226,19 +226,42 @@ export function AuthProvider({ children }) {
   }, [currentUser]);
 
   // Change Password
-  const changePassword = useCallback(async (newPassword) => {
+  const changePassword = useCallback(async (currentPassword, newPassword) => {
     if (!currentUser) return { success: false, error: 'Not authenticated.' };
+
+    if (!currentPassword) {
+      return { success: false, error: 'Please enter your current password.' };
+    }
 
     if (!newPassword || newPassword.length < 6) {
       return { success: false, error: 'New password must be at least 6 characters.' };
     }
 
+    if (currentPassword === newPassword) {
+      return { success: false, error: 'New password must be different from current password.' };
+    }
+
     try {
       if (supabase) {
-        const { error } = await supabase.auth.updateUser({
+        // 1. Verify current password by verifying credentials
+        const { error: verifyError } = await supabase.auth.signInWithPassword({
+          email: currentUser.email,
+          password: currentPassword
+        });
+
+        if (verifyError) {
+          return {
+            success: false,
+            error: 'Current password is incorrect. Please try again.'
+          };
+        }
+
+        // 2. Only if verification succeeds, update to new password
+        const { error: updateError } = await supabase.auth.updateUser({
           password: newPassword
         });
-        if (error) return { success: false, error: error.message };
+
+        if (updateError) return { success: false, error: updateError.message };
         return { success: true };
       }
       return { success: false, error: 'Supabase client unavailable.' };

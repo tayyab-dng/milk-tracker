@@ -164,8 +164,8 @@ export default function SettingsScreen({
       setPwError('Please fill in both fields.');
       return;
     }
-    if (newPw.length < 4) {
-      setPwError('New password must be at least 4 characters.');
+    if (newPw.length < 6) {
+      setPwError('New password must be at least 6 characters.');
       return;
     }
 
@@ -241,7 +241,7 @@ export default function SettingsScreen({
                   value={newPw}
                   onChangeText={setNewPw}
                   secureTextEntry
-                  placeholder="Min 4 characters"
+                  placeholder="Min 6 characters"
                   placeholderTextColor="rgba(255, 255, 255, 0.3)"
                 />
               </View>

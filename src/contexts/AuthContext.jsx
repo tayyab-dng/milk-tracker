@@ -193,12 +193,32 @@ export function AuthProvider({ children }) {
   // Change Password
   const changePassword = useCallback(async (currentPassword, newPassword) => {
     if (!currentUser) return { success: false, error: 'Not logged in.' };
+    if (!currentPassword) {
+      return { success: false, error: 'Please enter your current password.' };
+    }
     if (!newPassword || newPassword.length < 6) {
       return { success: false, error: 'New password must be at least 6 characters.' };
+    }
+    if (currentPassword === newPassword) {
+      return { success: false, error: 'New password must be different from current password.' };
     }
 
     try {
       if (supabase) {
+        // 1. Verify current password
+        const { error: verifyError } = await supabase.auth.signInWithPassword({
+          email: currentUser.email,
+          password: currentPassword
+        });
+
+        if (verifyError) {
+          return {
+            success: false,
+            error: 'Current password is incorrect. Please try again.'
+          };
+        }
+
+        // 2. Update to new password
         const { error } = await supabase.auth.updateUser({ password: newPassword });
         if (error) return { success: false, error: error.message };
         return { success: true };
