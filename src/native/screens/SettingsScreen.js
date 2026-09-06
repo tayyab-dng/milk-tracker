@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,6 @@ import {
   StyleSheet,
   Alert,
   Platform,
-  Share,
   ActivityIndicator
 } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
@@ -135,9 +134,6 @@ export default function SettingsScreen({
   // Reset confirmation state
   const [showResetConfirm, setShowResetConfirm] = useState(false);
 
-  // Hidden file input ref for web import
-  const fileInputRef = useRef(null);
-
   const handleSave = () => {
     if (!supplierName.trim()) {
       showToast ? showToast('Please enter a valid supplier name.') : Alert.alert('Error', 'Please enter a valid supplier name.');
@@ -150,70 +146,6 @@ export default function SettingsScreen({
     });
 
     showToast ? showToast('Settings saved successfully!') : Alert.alert('Success', 'Settings saved successfully!');
-  };
-
-  const handleExport = async () => {
-    try {
-      const backupData = {
-        entries,
-        settings,
-        monthlyRates,
-        exportDate: new Date().toISOString()
-      };
-      const jsonStr = JSON.stringify(backupData, null, 2);
-
-      if (Platform.OS === 'web') {
-        const blob = new Blob([jsonStr], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `milk-tracker-backup-${new Date().toISOString().slice(0, 10)}.json`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        showToast ? showToast('Backup downloaded successfully!') : Alert.alert('Success', 'Backup downloaded successfully!');
-      } else {
-        await Share.share({
-          title: 'Milk Tracker Backup',
-          message: jsonStr
-        });
-      }
-    } catch {
-      showToast ? showToast('Failed to export backup data.') : Alert.alert('Error', 'Failed to export backup data.');
-    }
-  };
-
-  const handleImportWeb = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      try {
-        const parsed = JSON.parse(event.target.result);
-        if (parsed.entries && parsed.settings) {
-          onImportData && onImportData(parsed.entries, parsed.settings, parsed.monthlyRates || {});
-          setSupplierName(parsed.settings.supplierName || parsed.settings.mamuName || 'Supplier');
-          showToast ? showToast('Data restored successfully from backup!') : Alert.alert('Success', 'Data restored successfully from backup!');
-        } else {
-          showToast ? showToast('Invalid backup file format.') : Alert.alert('Error', 'Invalid backup file format.');
-        }
-      } catch {
-        showToast ? showToast('Error reading backup file.') : Alert.alert('Error', 'Error reading backup file.');
-      }
-    };
-    reader.readAsText(file);
-    // Reset file input so user can import the same file again if desired
-    e.target.value = '';
-  };
-
-  const triggerImport = () => {
-    if (Platform.OS === 'web' && fileInputRef.current) {
-      fileInputRef.current.click();
-    } else {
-      Alert.alert('Import', 'Import is currently supported in the web preview.');
-    }
   };
 
   const handleResetClick = () => {
@@ -411,35 +343,7 @@ export default function SettingsScreen({
           </View>
         </View>
 
-        {/* 3. Backup & Restore Section */}
-        <View style={styles.sectionContainer}>
-          <View style={styles.sectionHeader}>
-            <SettingsIcon type="download" color="#818CF8" size={15} />
-            <Text style={styles.sectionHeaderText}>BACKUP & RESTORE</Text>
-          </View>
-
-          <View style={[styles.card, { gap: 10 }]}>
-            <TouchableOpacity
-              activeOpacity={0.8}
-              style={styles.backupActionBtn}
-              onPress={handleExport}
-            >
-              <SettingsIcon type="download" color="#A5B4FC" size={17} />
-              <Text style={styles.backupActionBtnText}>Export Backup (.json)</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              activeOpacity={0.8}
-              style={styles.backupActionBtn}
-              onPress={triggerImport}
-            >
-              <SettingsIcon type="upload" color="#A5B4FC" size={17} />
-              <Text style={styles.backupActionBtnText}>Import Backup (.json)</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* 4. Danger Zone Section */}
+        {/* 3. Danger Zone Section */}
         <View style={styles.sectionContainer}>
           <View style={styles.dangerZoneCard}>
             <View style={styles.dangerSectionHeader}>
@@ -482,17 +386,6 @@ export default function SettingsScreen({
           </View>
         </View>
       </ScrollView>
-
-      {/* Hidden File Input for Web Import */}
-      {Platform.OS === 'web' && (
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".json"
-          onChange={handleImportWeb}
-          style={{ display: 'none' }}
-        />
-      )}
     </View>
   );
 }
@@ -539,7 +432,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#8B5CF6',
     ...(Platform.OS === 'web' && {
       backgroundImage: 'linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%)',
-      boxShadow: '0 4px 14px rgba(139, 92, 246, 0.35)',
     }),
     alignItems: 'center',
     justifyContent: 'center',
@@ -773,7 +665,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#6366F1',
     ...(Platform.OS === 'web' && {
       backgroundImage: 'linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)',
-      boxShadow: '0 4px 16px rgba(99, 102, 241, 0.35)',
       cursor: 'pointer',
     }),
     flexDirection: 'row',
@@ -785,27 +676,6 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 15,
     fontWeight: '700',
-  },
-
-  // Backup Action Buttons
-  backupActionBtn: {
-    height: 48,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    ...(Platform.OS === 'web' && {
-      cursor: 'pointer',
-    }),
-  },
-  backupActionBtnText: {
-    color: '#A5B4FC',
-    fontSize: 14,
-    fontWeight: '600',
   },
 
   // Danger Zone
