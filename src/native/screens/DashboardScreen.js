@@ -189,15 +189,12 @@ export default function DashboardScreen({
 
   return (
     <View style={styles.container}>
-      {/* Top Header Area - Preserving Top Spacing as Empty Space to match other screens */}
-      <View style={styles.topSpacer} />
-
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        {/* Top Vibrant Hero Card (Matching Vite Aesthetic) */}
+        {/* Top Vibrant Hero Card (Expanded to Top, Left, and Right edges) */}
         <View style={styles.heroCard}>
         {/* Profile Row */}
         <View style={styles.profileRow}>
@@ -303,77 +300,80 @@ export default function DashboardScreen({
         </View>
       </View>
 
-      {/* Monthly Overview Card */}
-      <View style={styles.overviewCard}>
-        <View style={styles.overviewHeader}>
-          <Text style={styles.overviewTitle}>Monthly Overview</Text>
-          <Icon type="sun" color="#38BDF8" size={17} />
-        </View>
-        <Text style={styles.overviewText}>
-          {filteredEntries.length > 0
-            ? `${filteredEntries.length} deliveries logged (${totalKg.toFixed(1)} kg) in ${getMonthLabel(currentMonth)}. Supplier: ${settings.supplierName || 'Supplier'}.`
-            : `No deliveries logged yet for ${getMonthLabel(currentMonth)}. Tap "Add Milk" below to start tracking.`}
-        </Text>
-      </View>
-
-      {/* Quick Action Grid: All Logs & Share Bill */}
-      <View style={styles.actionGrid}>
-        <TouchableOpacity 
-          style={[styles.actionCard, styles.actionCardBlue]}
-          activeOpacity={0.7}
-          onPress={() => setCurrentTab && setCurrentTab('history')}
-        >
-          <View style={[styles.actionIconBubble, styles.bubbleBlue]}>
-            <Icon type="document" color="#38BDF8" size={20} />
-          </View>
-          <Text style={styles.actionTitle}>All Logs</Text>
-          <Text style={styles.actionSubtitle}>{filteredEntries.length} records this mo.</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity 
-          style={[styles.actionCard, styles.actionCardGreen]}
-          activeOpacity={0.7}
-          onPress={handleShareReport}
-        >
-          <View style={[styles.actionIconBubble, styles.bubbleGreen]}>
-            <Icon type="share" color="#10B981" size={20} />
-          </View>
-          <Text style={styles.actionTitle}>Share Bill</Text>
-          <Text style={styles.actionSubtitle}>WhatsApp & Copy</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Month Progress Card */}
-      <View style={styles.progressCard}>
-        <View style={styles.progressHeader}>
-          <View style={styles.progressTitleGroup}>
-            <View style={{ marginRight: 8 }}>
-              <Icon type="chart" color="#818CF8" size={17} />
+        {/* Dashboard Body Content with Standard Side Margins */}
+        <View style={styles.bodyContent}>
+          {/* Monthly Overview Card */}
+          <View style={styles.overviewCard}>
+            <View style={styles.overviewHeader}>
+              <Text style={styles.overviewTitle}>Monthly Overview</Text>
+              <Icon type="sun" color="#38BDF8" size={17} />
             </View>
-            <Text style={styles.progressTitle}>Month Progress</Text>
-          </View>
-        </View>
-
-        <View style={styles.progressMetricsRow}>
-          <View>
-            <Text style={styles.metricLabel}>DELIVERIES</Text>
-            <Text style={styles.metricValue}>
-              {filteredEntries.length} <Text style={styles.metricUnit}>/ {daysInMonth} days</Text>
+            <Text style={styles.overviewText}>
+              {filteredEntries.length > 0
+                ? `${filteredEntries.length} deliveries logged (${totalKg.toFixed(1)} kg) in ${getMonthLabel(currentMonth)}. Supplier: ${settings.supplierName || 'Supplier'}.`
+                : `No deliveries logged yet for ${getMonthLabel(currentMonth)}. Tap "Add Milk" below to start tracking.`}
             </Text>
           </View>
 
-          <View style={{ alignItems: 'flex-end' }}>
-            <Text style={styles.metricLabel}>DAILY AVG</Text>
-            <Text style={styles.metricValue}>
-              {avgDaily} <Text style={styles.metricUnit}>kg</Text>
-            </Text>
+          {/* Quick Action Grid: All Logs & Share Bill */}
+          <View style={styles.actionGrid}>
+            <TouchableOpacity 
+              style={[styles.actionCard, styles.actionCardBlue]}
+              activeOpacity={0.7}
+              onPress={() => setCurrentTab && setCurrentTab('history')}
+            >
+              <View style={[styles.actionIconBubble, styles.bubbleBlue]}>
+                <Icon type="document" color="#38BDF8" size={20} />
+              </View>
+              <Text style={styles.actionTitle}>All Logs</Text>
+              <Text style={styles.actionSubtitle}>{filteredEntries.length} records this mo.</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={[styles.actionCard, styles.actionCardGreen]}
+              activeOpacity={0.7}
+              onPress={handleShareReport}
+            >
+              <View style={[styles.actionIconBubble, styles.bubbleGreen]}>
+                <Icon type="share" color="#10B981" size={20} />
+              </View>
+              <Text style={styles.actionTitle}>Share Bill</Text>
+              <Text style={styles.actionSubtitle}>WhatsApp & Copy</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Month Progress Card */}
+          <View style={styles.progressCard}>
+            <View style={styles.progressHeader}>
+              <View style={styles.progressTitleGroup}>
+                <View style={{ marginRight: 8 }}>
+                  <Icon type="chart" color="#818CF8" size={17} />
+                </View>
+                <Text style={styles.progressTitle}>Month Progress</Text>
+              </View>
+            </View>
+
+            <View style={styles.progressMetricsRow}>
+              <View>
+                <Text style={styles.metricLabel}>DELIVERIES</Text>
+                <Text style={styles.metricValue}>
+                  {filteredEntries.length} <Text style={styles.metricUnit}>/ {daysInMonth} days</Text>
+                </Text>
+              </View>
+
+              <View style={{ alignItems: 'flex-end' }}>
+                <Text style={styles.metricLabel}>DAILY AVG</Text>
+                <Text style={styles.metricValue}>
+                  {avgDaily} <Text style={styles.metricUnit}>kg</Text>
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.progressTrack}>
+              <View style={[styles.progressFill, { width: `${progressPercent}%` }]} />
+            </View>
           </View>
         </View>
-
-        <View style={styles.progressTrack}>
-          <View style={[styles.progressFill, { width: `${progressPercent}%` }]} />
-        </View>
-      </View>
       </ScrollView>
     </View>
   );
@@ -387,22 +387,24 @@ const styles = StyleSheet.create({
       backgroundImage: 'linear-gradient(135deg, #0C0F1A 0%, #1a1040 40%, #0C0F1A 100%)',
     }),
   },
-  topSpacer: {
-    height: 60,
-  },
   scrollView: {
     flex: 1,
   },
   content: {
-    paddingHorizontal: 16,
     paddingBottom: 120,
   },
-  // Top Hero Gradient Card
+  bodyContent: {
+    paddingHorizontal: 16,
+  },
+  // Top Hero Gradient Card (Expanded to Top, Left, and Right edges)
   heroCard: {
-    borderRadius: 26,
-    paddingHorizontal: 20,
-    paddingTop: 24,
-    paddingBottom: 22,
+    borderTopLeftRadius: 0,
+    borderTopRightRadius: 0,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
+    paddingHorizontal: 36,
+    paddingTop: 84,
+    paddingBottom: 24,
     marginBottom: 16,
     backgroundColor: '#6366F1',
     shadowColor: '#6366F1',
