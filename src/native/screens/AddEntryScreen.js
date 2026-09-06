@@ -192,188 +192,186 @@ export default function AddEntryScreen({
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.formContent}>
-            {/* 1. Quantity Stepper & Quick Presets */}
-            <View style={styles.formGroup}>
-              {/* Glowing Circular Stepper */}
-              <View style={styles.stepperContainer}>
-                <TouchableOpacity
-                  activeOpacity={0.7}
-                  style={styles.stepperAdjustBtn}
-                  onPress={() => adjustQuantity(-0.5)}
-                >
-                  <Text style={styles.stepperAdjustBtnText}>−</Text>
-                </TouchableOpacity>
+          {/* 1. Quantity Stepper & Quick Presets */}
+          <View style={styles.formGroup}>
+            {/* Glowing Circular Stepper (Large Heroic Dial) */}
+            <View style={styles.stepperContainer}>
+              <TouchableOpacity
+                activeOpacity={0.7}
+                style={styles.stepperAdjustBtn}
+                onPress={() => adjustQuantity(-0.5)}
+              >
+                <Text style={styles.stepperAdjustBtnText}>−</Text>
+              </TouchableOpacity>
 
+              <View style={styles.outerGlowRing}>
                 <View style={styles.qtyValueCircle}>
                   <Text style={styles.qtyNumber}>
                     {parseFloat(quantity || 0).toFixed(1)}
                   </Text>
                   <Text style={styles.qtyUnit}>kg</Text>
                 </View>
-
-                <TouchableOpacity
-                  activeOpacity={0.7}
-                  style={styles.stepperAdjustBtn}
-                  onPress={() => adjustQuantity(0.5)}
-                >
-                  <Text style={styles.stepperAdjustBtnText}>+</Text>
-                </TouchableOpacity>
               </View>
 
-              {/* Quick Presets Grid (4 columns) */}
-              <View style={styles.quickGrid}>
-                {quickBtns.map((val) => {
-                  const isSelected = Math.abs(parseFloat(quantity || 0) - val) < 0.05;
-                  return (
-                    <TouchableOpacity
-                      key={val}
-                      activeOpacity={0.8}
+              <TouchableOpacity
+                activeOpacity={0.7}
+                style={styles.stepperAdjustBtn}
+                onPress={() => adjustQuantity(0.5)}
+              >
+                <Text style={styles.stepperAdjustBtnText}>+</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Quick Presets Grid (4 columns) */}
+            <View style={styles.quickGrid}>
+              {quickBtns.map((val) => {
+                const isSelected = Math.abs(parseFloat(quantity || 0) - val) < 0.05;
+                return (
+                  <TouchableOpacity
+                    key={val}
+                    activeOpacity={0.8}
+                    style={[
+                      styles.quickBtn,
+                      isSelected && styles.quickBtnActive
+                    ]}
+                    onPress={() => handleQuickSelect(val)}
+                  >
+                    <Text
                       style={[
-                        styles.quickBtn,
-                        isSelected && styles.quickBtnActive
+                        styles.quickBtnText,
+                        isSelected && styles.quickBtnTextActive
                       ]}
-                      onPress={() => handleQuickSelect(val)}
                     >
-                      <Text
-                        style={[
-                          styles.quickBtnText,
-                          isSelected && styles.quickBtnTextActive
-                        ]}
-                      >
-                        {val} kg
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
+                      {val} kg
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
+          </View>
 
-            {/* 2. Delivery Shift (Morning / Evening) */}
-            <View style={styles.formGroup}>
-              <View style={styles.shiftRow}>
-                <TouchableOpacity
-                  activeOpacity={0.8}
-                  style={[
-                    styles.shiftBtn,
-                    shift === 'Morning' && styles.shiftBtnActive
-                  ]}
-                  onPress={() => setShift('Morning')}
-                >
-                  <AddIcon
-                    type="sun"
-                    color={shift === 'Morning' ? '#FFFFFF' : '#818CF8'}
-                    size={16}
-                  />
-                  <Text
-                    style={[
-                      styles.shiftBtnText,
-                      shift === 'Morning' && styles.shiftBtnTextActive
-                    ]}
-                  >
-                    Morning
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  activeOpacity={0.8}
-                  style={[
-                    styles.shiftBtn,
-                    shift === 'Evening' && styles.shiftBtnActive
-                  ]}
-                  onPress={() => setShift('Evening')}
-                >
-                  <AddIcon
-                    type="moon"
-                    color={shift === 'Evening' ? '#FFFFFF' : '#818CF8'}
-                    size={16}
-                  />
-                  <Text
-                    style={[
-                      styles.shiftBtnText,
-                      shift === 'Evening' && styles.shiftBtnTextActive
-                    ]}
-                  >
-                    Evening
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            {/* 3. Date Field */}
-            <View style={styles.formGroup}>
-              {Platform.OS === 'web' ? (
-                <input
-                  type="date"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  required
-                  style={{
-                    backgroundColor: 'rgba(22, 27, 46, 0.8)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    borderRadius: 16,
-                    padding: '0 16px',
-                    height: 52,
-                    fontSize: 15,
-                    fontWeight: 500,
-                    color: '#FFFFFF',
-                    width: '100%',
-                    boxSizing: 'border-box',
-                    outline: 'none',
-                    fontFamily: 'inherit',
-                    colorScheme: 'dark'
-                  }}
+          {/* 2. Delivery Shift (Morning / Evening) */}
+          <View style={styles.formGroup}>
+            <View style={styles.shiftRow}>
+              <TouchableOpacity
+                activeOpacity={0.8}
+                style={[
+                  styles.shiftBtn,
+                  shift === 'Morning' && styles.shiftBtnActive
+                ]}
+                onPress={() => setShift('Morning')}
+              >
+                <AddIcon
+                  type="sun"
+                  color={shift === 'Morning' ? '#FFFFFF' : '#818CF8'}
+                  size={16}
                 />
-              ) : (
-                <TextInput
-                  style={styles.textInput}
-                  value={date}
-                  onChangeText={setDate}
-                  placeholder="YYYY-MM-DD"
-                  placeholderTextColor="rgba(255, 255, 255, 0.3)"
+                <Text
+                  style={[
+                    styles.shiftBtnText,
+                    shift === 'Morning' && styles.shiftBtnTextActive
+                  ]}
+                >
+                  Morning
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                activeOpacity={0.8}
+                style={[
+                  styles.shiftBtn,
+                  shift === 'Evening' && styles.shiftBtnActive
+                ]}
+                onPress={() => setShift('Evening')}
+              >
+                <AddIcon
+                  type="moon"
+                  color={shift === 'Evening' ? '#FFFFFF' : '#818CF8'}
+                  size={16}
                 />
-              )}
+                <Text
+                  style={[
+                    styles.shiftBtnText,
+                    shift === 'Evening' && styles.shiftBtnTextActive
+                  ]}
+                >
+                  Evening
+                </Text>
+              </TouchableOpacity>
             </View>
+          </View>
 
-            {/* 4. Notes Input */}
-            <View style={styles.formGroup}>
-              <View style={styles.fieldLabelRow}>
-                <AddIcon type="notes" color="#818CF8" size={14} />
-                <Text style={styles.fieldLabel}>NOTES (OPTIONAL)</Text>
-              </View>
-
+          {/* 3. Date Field */}
+          <View style={styles.formGroup}>
+            {Platform.OS === 'web' ? (
+              <input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                required
+                style={{
+                  backgroundColor: 'rgba(22, 27, 46, 0.8)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: 16,
+                  padding: '0 16px',
+                  height: 52,
+                  fontSize: 15,
+                  fontWeight: 500,
+                  color: '#FFFFFF',
+                  width: '100%',
+                  boxSizing: 'border-box',
+                  outline: 'none',
+                  fontFamily: 'inherit',
+                  colorScheme: 'dark'
+                }}
+              />
+            ) : (
               <TextInput
                 style={styles.textInput}
-                value={note}
-                onChangeText={setNote}
-                placeholder="e.g. morning, afternoon, extra curd..."
+                value={date}
+                onChangeText={setDate}
+                placeholder="YYYY-MM-DD"
                 placeholderTextColor="rgba(255, 255, 255, 0.3)"
-                maxLength={40}
               />
-            </View>
+            )}
           </View>
 
-          {/* 5. Save Button (Anchored towards bottom) */}
-          <View style={styles.actionContainer}>
-            <TouchableOpacity
-              activeOpacity={0.85}
-              style={[styles.saveBtn, saved && styles.saveBtnSuccess]}
-              onPress={handleSubmit}
-              disabled={saved}
-            >
-              {saved ? (
-                <>
-                  <AddIcon type="check" color="#FFFFFF" size={18} />
-                  <Text style={styles.saveBtnText}>Saved!</Text>
-                </>
-              ) : (
-                <>
-                  <AddIcon type="save" color="#FFFFFF" size={18} />
-                  <Text style={styles.saveBtnText}>Save Log</Text>
-                </>
-              )}
-            </TouchableOpacity>
+          {/* 4. Notes Input */}
+          <View style={styles.formGroup}>
+            <View style={styles.fieldLabelRow}>
+              <AddIcon type="notes" color="#818CF8" size={14} />
+              <Text style={styles.fieldLabel}>NOTES (OPTIONAL)</Text>
+            </View>
+
+            <TextInput
+              style={styles.textInput}
+              value={note}
+              onChangeText={setNote}
+              placeholder="e.g. morning, afternoon, extra curd..."
+              placeholderTextColor="rgba(255, 255, 255, 0.3)"
+              maxLength={40}
+            />
           </View>
+
+          {/* 5. Save Button */}
+          <TouchableOpacity
+            activeOpacity={0.85}
+            style={[styles.saveBtn, saved && styles.saveBtnSuccess]}
+            onPress={handleSubmit}
+            disabled={saved}
+          >
+            {saved ? (
+              <>
+                <AddIcon type="check" color="#FFFFFF" size={18} />
+                <Text style={styles.saveBtnText}>Saved!</Text>
+              </>
+            ) : (
+              <>
+                <AddIcon type="save" color="#FFFFFF" size={18} />
+                <Text style={styles.saveBtnText}>Save Log</Text>
+              </>
+            )}
+          </TouchableOpacity>
         </ScrollView>
       </View>
     </KeyboardAvoidingView>
@@ -398,21 +396,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    flexGrow: 1,
     paddingHorizontal: 18,
     paddingBottom: 110,
-    justifyContent: 'space-between',
-  },
-  formContent: {
-    flex: 1,
-  },
-  actionContainer: {
-    marginTop: 20,
   },
 
   // Form Groups
   formGroup: {
-    marginBottom: 18,
+    marginBottom: 20,
   },
   fieldLabelRow: {
     flexDirection: 'row',
@@ -477,22 +467,61 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
 
-  // Stepper & Circle
+  // Stepper & Circle (Large Heroic Dial)
   stepperContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 24,
-    marginBottom: 16,
-    marginTop: 4,
+    gap: 16,
+    marginTop: 6,
+    marginBottom: 20,
+  },
+  outerGlowRing: {
+    width: 204,
+    height: 204,
+    borderRadius: 102,
+    backgroundColor: 'rgba(139, 92, 246, 0.08)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(139, 92, 246, 0.22)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...(Platform.OS === 'web' && {
+      boxShadow: '0 0 50px rgba(139, 92, 246, 0.25)',
+    }),
+  },
+  qtyValueCircle: {
+    width: 176,
+    height: 176,
+    borderRadius: 88,
+    backgroundColor: '#8B5CF6',
+    ...(Platform.OS === 'web' && {
+      backgroundImage: 'linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%)',
+      boxShadow: '0 12px 36px rgba(139, 92, 246, 0.5)',
+    }),
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  qtyNumber: {
+    fontFamily: Platform.OS === 'web' ? 'Outfit, sans-serif' : undefined,
+    fontSize: 54,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    lineHeight: 56,
+  },
+  qtyUnit: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: 'rgba(255, 255, 255, 0.9)',
+    marginTop: 3,
+    letterSpacing: 0.8,
   },
   stepperAdjustBtn: {
     width: 52,
     height: 52,
     borderRadius: 26,
-    backgroundColor: 'rgba(22, 27, 46, 0.8)',
+    backgroundColor: 'rgba(22, 27, 46, 0.85)',
     borderWidth: 1.5,
-    borderColor: 'rgba(255, 255, 255, 0.14)',
+    borderColor: 'rgba(255, 255, 255, 0.15)',
     alignItems: 'center',
     justifyContent: 'center',
     ...(Platform.OS === 'web' && {
@@ -502,35 +531,9 @@ const styles = StyleSheet.create({
   },
   stepperAdjustBtnText: {
     color: '#818CF8',
-    fontSize: 26,
+    fontSize: 28,
     fontWeight: '700',
-    lineHeight: 28,
-  },
-  qtyValueCircle: {
-    width: 116,
-    height: 116,
-    borderRadius: 58,
-    backgroundColor: '#8B5CF6',
-    ...(Platform.OS === 'web' && {
-      backgroundImage: 'linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%)',
-      boxShadow: '0 10px 30px rgba(139, 92, 246, 0.4)',
-    }),
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  qtyNumber: {
-    fontFamily: Platform.OS === 'web' ? 'Outfit, sans-serif' : undefined,
-    fontSize: 36,
-    fontWeight: '900',
-    color: '#FFFFFF',
-    lineHeight: 38,
-  },
-  qtyUnit: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: 'rgba(255, 255, 255, 0.85)',
-    marginTop: 2,
-    letterSpacing: 0.5,
+    lineHeight: 30,
   },
 
   // Quick Add Grid
@@ -584,6 +587,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
+    marginTop: 6,
   },
   saveBtnSuccess: {
     backgroundColor: '#10B981',
