@@ -194,11 +194,6 @@ export default function AddEntryScreen({
         >
           {/* 1. Quantity Stepper & Quick Presets */}
           <View style={styles.formGroup}>
-            <View style={styles.fieldLabelRow}>
-              <AddIcon type="droplet" color="#818CF8" size={14} />
-              <Text style={styles.fieldLabel}>QUANTITY (KG)</Text>
-            </View>
-
             {/* Glowing Circular Stepper */}
             <View style={styles.stepperContainer}>
               <TouchableOpacity
@@ -255,11 +250,6 @@ export default function AddEntryScreen({
 
           {/* 2. Delivery Shift (Morning / Evening) */}
           <View style={styles.formGroup}>
-            <View style={styles.fieldLabelRow}>
-              <AddIcon type="shift" color="#818CF8" size={14} />
-              <Text style={styles.fieldLabel}>DELIVERY SHIFT</Text>
-            </View>
-
             <View style={styles.shiftRow}>
               <TouchableOpacity
                 activeOpacity={0.8}
@@ -311,11 +301,6 @@ export default function AddEntryScreen({
 
           {/* 3. Date Field */}
           <View style={styles.formGroup}>
-            <View style={styles.fieldLabelRow}>
-              <AddIcon type="calendar" color="#818CF8" size={14} />
-              <Text style={styles.fieldLabel}>DATE</Text>
-            </View>
-
             {Platform.OS === 'web' ? (
               <input
                 type="date"
@@ -325,7 +310,7 @@ export default function AddEntryScreen({
                 style={{
                   backgroundColor: 'rgba(22, 27, 46, 0.8)',
                   border: '1px solid rgba(255, 255, 255, 0.1)',
-                  borderRadius: 12,
+                  borderRadius: 14,
                   padding: '0 14px',
                   height: 48,
                   fontSize: 15,
@@ -415,13 +400,13 @@ const styles = StyleSheet.create({
 
   // Form Groups
   formGroup: {
-    marginBottom: 20,
+    marginBottom: 16,
   },
   fieldLabelRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    marginBottom: 10,
+    marginBottom: 8,
   },
   fieldLabel: {
     fontSize: 11,
@@ -433,7 +418,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(22, 27, 46, 0.8)',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 12,
+    borderRadius: 14,
     paddingHorizontal: 14,
     height: 48,
     fontSize: 14,
@@ -448,8 +433,8 @@ const styles = StyleSheet.create({
   },
   shiftBtn: {
     flex: 1,
-    height: 44,
-    borderRadius: 12,
+    height: 46,
+    borderRadius: 14,
     backgroundColor: 'rgba(22, 27, 46, 0.8)',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.1)',
