@@ -188,13 +188,17 @@ export default function DashboardScreen({
   };
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
-      showsVerticalScrollIndicator={false}
-    >
-      {/* Top Vibrant Hero Card (Matching Vite Aesthetic) */}
-      <View style={styles.heroCard}>
+    <View style={styles.container}>
+      {/* Top Header Area - Preserving Top Spacing as Empty Space to match other screens */}
+      <View style={styles.topSpacer} />
+
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Top Vibrant Hero Card (Matching Vite Aesthetic) */}
+        <View style={styles.heroCard}>
         {/* Profile Row */}
         <View style={styles.profileRow}>
           <View>
@@ -370,7 +374,8 @@ export default function DashboardScreen({
           <View style={[styles.progressFill, { width: `${progressPercent}%` }]} />
         </View>
       </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 
@@ -382,8 +387,14 @@ const styles = StyleSheet.create({
       backgroundImage: 'linear-gradient(135deg, #0C0F1A 0%, #1a1040 40%, #0C0F1A 100%)',
     }),
   },
+  topSpacer: {
+    height: 60,
+  },
+  scrollView: {
+    flex: 1,
+  },
   content: {
-    padding: spacing.md,
+    paddingHorizontal: 16,
     paddingBottom: 120,
   },
   // Top Hero Gradient Card
