@@ -204,13 +204,11 @@ export default function AddEntryScreen({
                 <Text style={styles.stepperAdjustBtnText}>−</Text>
               </TouchableOpacity>
 
-              <View style={styles.outerGlowRing}>
-                <View style={styles.qtyValueCircle}>
-                  <Text style={styles.qtyNumber}>
-                    {parseFloat(quantity || 0).toFixed(1)}
-                  </Text>
-                  <Text style={styles.qtyUnit}>kg</Text>
-                </View>
+              <View style={styles.qtyValueCircle}>
+                <Text style={styles.qtyNumber}>
+                  {parseFloat(quantity || 0).toFixed(1)}
+                </Text>
+                <Text style={styles.qtyUnit}>kg</Text>
               </View>
 
               <TouchableOpacity
@@ -454,7 +452,6 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
     ...(Platform.OS === 'web' && {
       backgroundImage: 'linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)',
-      boxShadow: '0 6px 18px rgba(99, 102, 241, 0.35)',
     }),
   },
   shiftBtnText: {
@@ -476,27 +473,15 @@ const styles = StyleSheet.create({
     marginTop: 6,
     marginBottom: 20,
   },
-  outerGlowRing: {
-    width: 204,
-    height: 204,
-    borderRadius: 102,
-    backgroundColor: 'rgba(139, 92, 246, 0.08)',
-    borderWidth: 1.5,
-    borderColor: 'rgba(139, 92, 246, 0.22)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...(Platform.OS === 'web' && {
-      boxShadow: '0 0 50px rgba(139, 92, 246, 0.25)',
-    }),
-  },
   qtyValueCircle: {
     width: 176,
     height: 176,
     borderRadius: 88,
     backgroundColor: '#8B5CF6',
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
     ...(Platform.OS === 'web' && {
       backgroundImage: 'linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%)',
-      boxShadow: '0 12px 36px rgba(139, 92, 246, 0.5)',
     }),
     alignItems: 'center',
     justifyContent: 'center',
@@ -560,7 +545,6 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
     ...(Platform.OS === 'web' && {
       backgroundImage: 'linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)',
-      boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)',
     }),
   },
   quickBtnText: {
@@ -580,7 +564,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#6366F1',
     ...(Platform.OS === 'web' && {
       backgroundImage: 'linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)',
-      boxShadow: '0 6px 20px rgba(99, 102, 241, 0.4)',
       cursor: 'pointer',
     }),
     flexDirection: 'row',
@@ -593,7 +576,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#10B981',
     ...(Platform.OS === 'web' && {
       backgroundImage: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
-      boxShadow: '0 6px 20px rgba(16, 185, 129, 0.4)',
     }),
   },
   saveBtnText: {

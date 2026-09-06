@@ -180,22 +180,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: -24,
-    shadowColor: '#6366F1',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 16,
-    elevation: 8,
     borderWidth: 4,
     borderColor: '#0C0F1A',
     ...(Platform.OS === 'web' && {
       backgroundImage: 'linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)',
-      boxShadow: '0 4px 16px rgba(99, 102, 241, 0.4), 0 0 0 4px #0C0F1A',
-      transition: 'all 0.2s ease',
     }),
   },
-  navFabActive: {
-    transform: [{ scale: 1.05 }],
-  },
+  navFabActive: {},
   navItemAddLabel: {
     fontSize: 11,
     color: 'rgba(255, 255, 255, 0.45)',
