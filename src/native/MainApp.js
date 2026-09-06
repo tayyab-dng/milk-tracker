@@ -214,6 +214,8 @@ export default function MainApp({ userId }) {
           <SettingsScreen
             settings={settings}
             onUpdateSettings={handleUpdateSettings}
+            updateMonthlyRate={handleUpdateMonthlyRate}
+            currentMonth={currentMonth}
             onResetData={handleResetData}
             onImportData={handleImportData}
             entries={entries}

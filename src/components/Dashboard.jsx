@@ -178,41 +178,11 @@ export default function Dashboard({
             </div>
           </div>
 
-          <div className="stat-hero-glass" style={{ cursor: 'pointer' }} onClick={!isEditingRate ? startEditingRate : undefined}>
+          <div className="stat-hero-glass">
             <span style={{ fontSize: '0.7rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', opacity: 0.75 }}>Rate / Kg</span>
-            {isEditingRate ? (
-              <form onSubmit={handleRateSubmit} style={{ display: 'flex', alignItems: 'center', marginTop: '2px' }}>
-                <input 
-                  type="number" 
-                  step="0.01" 
-                  autoFocus 
-                  value={tempRate}
-                  onChange={(e) => setTempRate(e.target.value)}
-                  onBlur={() => setIsEditingRate(false)}
-                  style={{ 
-                    width: '60px', 
-                    padding: '4px 6px', 
-                    border: '1px solid rgba(255,255,255,0.4)', 
-                    borderRadius: '6px', 
-                    textAlign: 'center', 
-                    fontSize: '1rem', 
-                    fontWeight: 700,
-                    background: 'rgba(255,255,255,0.15)', 
-                    color: 'white',
-                    outline: 'none'
-                  }}
-                />
-                <button type="submit" style={{ display: 'none' }} />
-              </form>
-            ) : (
-              <div style={{ fontSize: '1.3rem', fontWeight: 800, fontFamily: 'var(--font-display)', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                {settings.currency}{rate}
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ opacity: 0.6 }}>
-                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"></path>
-                  <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                </svg>
-              </div>
-            )}
+            <div style={{ fontSize: '1.3rem', fontWeight: 800, fontFamily: 'var(--font-display)', marginTop: '2px' }}>
+              {settings.currency}{rate}
+            </div>
           </div>
         </div>
       </div>

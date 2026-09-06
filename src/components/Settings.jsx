@@ -27,9 +27,16 @@ export default function Settings({ settings, onUpdateSettings, onImportData, onR
       return;
     }
 
+    const parsedRate = parseFloat(defaultRate);
+    if (isNaN(parsedRate) || parsedRate < 0) {
+      showToast("Please enter a valid rate.");
+      return;
+    }
+
     onUpdateSettings({
       ...settings,
-      supplierName: supplierName.trim()
+      supplierName: supplierName.trim(),
+      defaultRate: parsedRate
     });
 
     showToast("Settings saved successfully! ⚙️");
@@ -281,6 +288,21 @@ export default function Settings({ settings, onUpdateSettings, onImportData, onR
               required
               maxLength="25"
               placeholder="e.g. Supplier name..."
+            />
+          </div>
+
+          {/* Milk Rate */}
+          <div className="form-group">
+            <label className="form-label" htmlFor="setting-rate">Milk Rate ({currency} / kg)</label>
+            <input 
+              type="number" 
+              id="setting-rate"
+              className="form-control"
+              value={defaultRate}
+              onChange={(e) => setDefaultRate(e.target.value)}
+              required
+              step="any"
+              placeholder="e.g. 190"
             />
           </div>
 

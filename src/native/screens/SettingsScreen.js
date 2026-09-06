@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -110,6 +110,8 @@ function SettingsIcon({ type, color = 'currentColor', size = 18 }) {
 export default function SettingsScreen({
   settings,
   onUpdateSettings,
+  updateMonthlyRate,
+  currentMonth,
   onResetData,
   onImportData,
   entries = [],
@@ -120,6 +122,22 @@ export default function SettingsScreen({
   const { currentUser, logout, changePassword } = useAuth();
 
   const [supplierName, setSupplierName] = useState(settings?.supplierName || settings?.mamuName || 'Supplier');
+
+  const getInitialRate = () => {
+    if (currentMonth && monthlyRates?.[currentMonth] !== undefined) {
+      return monthlyRates[currentMonth];
+    }
+    return settings?.defaultRate ?? 60;
+  };
+
+  const [rate, setRate] = useState(getInitialRate().toString());
+
+  useEffect(() => {
+    const r = (currentMonth && monthlyRates?.[currentMonth] !== undefined)
+      ? monthlyRates[currentMonth]
+      : (settings?.defaultRate ?? 60);
+    setRate(r.toString());
+  }, [settings?.defaultRate, currentMonth, monthlyRates]);
 
   // Change password states
   const [showChangePw, setShowChangePw] = useState(false);
@@ -140,10 +158,21 @@ export default function SettingsScreen({
       return;
     }
 
+    const parsedRate = parseFloat(rate);
+    if (isNaN(parsedRate) || parsedRate < 0) {
+      showToast ? showToast('Please enter a valid rate per kg.') : Alert.alert('Error', 'Please enter a valid rate per kg.');
+      return;
+    }
+
     onUpdateSettings({
       ...settings,
-      supplierName: supplierName.trim()
+      supplierName: supplierName.trim(),
+      defaultRate: parsedRate
     });
+
+    if (updateMonthlyRate && currentMonth) {
+      updateMonthlyRate(currentMonth, parsedRate);
+    }
 
     showToast ? showToast('Settings saved successfully!') : Alert.alert('Success', 'Settings saved successfully!');
   };
@@ -155,6 +184,7 @@ export default function SettingsScreen({
     }
     onResetData && onResetData();
     setSupplierName('Supplier');
+    setRate('60');
     setShowResetConfirm(false);
     showToast ? showToast('App data reset to defaults.') : Alert.alert('Reset', 'App data reset to defaults.');
   };
@@ -329,6 +359,16 @@ export default function SettingsScreen({
               onChangeText={setSupplierName}
               maxLength={25}
               placeholder="e.g. Supplier name..."
+              placeholderTextColor="rgba(255, 255, 255, 0.3)"
+            />
+
+            <Text style={styles.fieldLabel}>MILK RATE ({settings?.currency || 'PKR'} / KG)</Text>
+            <TextInput
+              style={styles.input}
+              value={rate}
+              onChangeText={setRate}
+              keyboardType="numeric"
+              placeholder="e.g. 190"
               placeholderTextColor="rgba(255, 255, 255, 0.3)"
             />
 

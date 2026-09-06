@@ -1,13 +1,11 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
   ScrollView,
   TouchableOpacity,
-  TextInput,
   StyleSheet,
   Share,
-  Alert,
   Platform
 } from 'react-native';
 import { colors, typography, spacing, borderRadius } from '../theme';
@@ -97,9 +95,6 @@ export default function DashboardScreen({
   showToast
 }) {
   const { currentUser } = useAuth();
-  const [isEditingRate, setIsEditingRate] = useState(false);
-  const [tempRate, setTempRate] = useState('');
-
   const userName = currentUser?.name || settings.userName || 'Tayyab Safdar';
   const initials = userName
     .split(' ')
@@ -146,17 +141,6 @@ export default function DashboardScreen({
   const daysInMonth = new Date(yearNum, monNum, 0).getDate();
   const progressPercent = Math.min((filteredEntries.length / daysInMonth) * 100, 100);
   const avgDaily = filteredEntries.length > 0 ? (totalKg / filteredEntries.length).toFixed(2) : '0.00';
-
-  const handleRateSubmit = () => {
-    const r = parseFloat(tempRate);
-    if (!isNaN(r) && r >= 0) {
-      updateMonthlyRate(currentMonth, r);
-      setIsEditingRate(false);
-      showToast(`Rate set to ${settings.currency}${r}/kg for this month.`);
-    } else {
-      Alert.alert('Invalid Rate', 'Please enter a valid numeric rate.');
-    }
-  };
 
   const handleShareReport = async () => {
     const monthLabel = getMonthLabel(currentMonth);
@@ -267,36 +251,10 @@ export default function DashboardScreen({
             </Text>
           </View>
 
-          <TouchableOpacity 
-            style={styles.glassStatBox}
-            activeOpacity={0.7}
-            onPress={() => {
-              setTempRate(rate.toString());
-              setIsEditingRate(true);
-            }}
-          >
+          <View style={styles.glassStatBox}>
             <Text style={styles.statLabel}>RATE / KG</Text>
-            {isEditingRate ? (
-              <View style={styles.rateEditRow}>
-                <TextInput
-                  style={styles.rateInput}
-                  value={tempRate}
-                  onChangeText={setTempRate}
-                  keyboardType="numeric"
-                  autoFocus
-                  onBlur={handleRateSubmit}
-                  onSubmitEditing={handleRateSubmit}
-                />
-              </View>
-            ) : (
-              <View style={styles.rateDisplayRow}>
-                <Text style={styles.statValue}>{settings.currency}{rate}</Text>
-                <View style={{ marginLeft: 5 }}>
-                  <Icon type="edit" color="rgba(255, 255, 255, 0.7)" size={12} />
-                </View>
-              </View>
-            )}
-          </TouchableOpacity>
+            <Text style={styles.statValue}>{settings.currency}{rate}</Text>
+          </View>
         </View>
       </View>
 
@@ -576,23 +534,6 @@ const styles = StyleSheet.create({
     fontSize: 12.5,
     fontWeight: '500',
     opacity: 0.85,
-  },
-  rateDisplayRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  rateEditRow: {
-    marginTop: 2,
-  },
-  rateInput: {
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '700',
-    paddingVertical: 2,
-    paddingHorizontal: 8,
-    borderRadius: 6,
-    width: 75,
   },
   // Monthly Overview Card
   overviewCard: {
