@@ -192,103 +192,7 @@ export default function AddEntryScreen({
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
         >
-          {/* 1. Date Field */}
-          <View style={styles.formGroup}>
-            <View style={styles.fieldLabelRow}>
-              <AddIcon type="calendar" color="#818CF8" size={14} />
-              <Text style={styles.fieldLabel}>DATE</Text>
-            </View>
-
-            {Platform.OS === 'web' ? (
-              <input
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                required
-                style={{
-                  backgroundColor: 'rgba(22, 27, 46, 0.8)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  borderRadius: 12,
-                  padding: '0 14px',
-                  height: 48,
-                  fontSize: 15,
-                  fontWeight: 500,
-                  color: '#FFFFFF',
-                  width: '100%',
-                  boxSizing: 'border-box',
-                  outline: 'none',
-                  fontFamily: 'inherit',
-                  colorScheme: 'dark'
-                }}
-              />
-            ) : (
-              <TextInput
-                style={styles.textInput}
-                value={date}
-                onChangeText={setDate}
-                placeholder="YYYY-MM-DD"
-                placeholderTextColor="rgba(255, 255, 255, 0.3)"
-              />
-            )}
-          </View>
-
-          {/* 2. Delivery Shift (Morning / Evening) */}
-          <View style={styles.formGroup}>
-            <View style={styles.fieldLabelRow}>
-              <AddIcon type="shift" color="#818CF8" size={14} />
-              <Text style={styles.fieldLabel}>DELIVERY SHIFT</Text>
-            </View>
-
-            <View style={styles.shiftRow}>
-              <TouchableOpacity
-                activeOpacity={0.8}
-                style={[
-                  styles.shiftBtn,
-                  shift === 'Morning' && styles.shiftBtnActive
-                ]}
-                onPress={() => setShift('Morning')}
-              >
-                <AddIcon
-                  type="sun"
-                  color={shift === 'Morning' ? '#FFFFFF' : '#818CF8'}
-                  size={16}
-                />
-                <Text
-                  style={[
-                    styles.shiftBtnText,
-                    shift === 'Morning' && styles.shiftBtnTextActive
-                  ]}
-                >
-                  Morning
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                activeOpacity={0.8}
-                style={[
-                  styles.shiftBtn,
-                  shift === 'Evening' && styles.shiftBtnActive
-                ]}
-                onPress={() => setShift('Evening')}
-              >
-                <AddIcon
-                  type="moon"
-                  color={shift === 'Evening' ? '#FFFFFF' : '#818CF8'}
-                  size={16}
-                />
-                <Text
-                  style={[
-                    styles.shiftBtnText,
-                    shift === 'Evening' && styles.shiftBtnTextActive
-                  ]}
-                >
-                  Evening
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          {/* 3. Quantity Stepper & Quick Presets */}
+          {/* 1. Quantity Stepper & Quick Presets */}
           <View style={styles.formGroup}>
             <View style={styles.fieldLabelRow}>
               <AddIcon type="droplet" color="#818CF8" size={14} />
@@ -347,6 +251,102 @@ export default function AddEntryScreen({
                 );
               })}
             </View>
+          </View>
+
+          {/* 2. Delivery Shift (Morning / Evening) */}
+          <View style={styles.formGroup}>
+            <View style={styles.fieldLabelRow}>
+              <AddIcon type="shift" color="#818CF8" size={14} />
+              <Text style={styles.fieldLabel}>DELIVERY SHIFT</Text>
+            </View>
+
+            <View style={styles.shiftRow}>
+              <TouchableOpacity
+                activeOpacity={0.8}
+                style={[
+                  styles.shiftBtn,
+                  shift === 'Morning' && styles.shiftBtnActive
+                ]}
+                onPress={() => setShift('Morning')}
+              >
+                <AddIcon
+                  type="sun"
+                  color={shift === 'Morning' ? '#FFFFFF' : '#818CF8'}
+                  size={16}
+                />
+                <Text
+                  style={[
+                    styles.shiftBtnText,
+                    shift === 'Morning' && styles.shiftBtnTextActive
+                  ]}
+                >
+                  Morning
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                activeOpacity={0.8}
+                style={[
+                  styles.shiftBtn,
+                  shift === 'Evening' && styles.shiftBtnActive
+                ]}
+                onPress={() => setShift('Evening')}
+              >
+                <AddIcon
+                  type="moon"
+                  color={shift === 'Evening' ? '#FFFFFF' : '#818CF8'}
+                  size={16}
+                />
+                <Text
+                  style={[
+                    styles.shiftBtnText,
+                    shift === 'Evening' && styles.shiftBtnTextActive
+                  ]}
+                >
+                  Evening
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* 3. Date Field */}
+          <View style={styles.formGroup}>
+            <View style={styles.fieldLabelRow}>
+              <AddIcon type="calendar" color="#818CF8" size={14} />
+              <Text style={styles.fieldLabel}>DATE</Text>
+            </View>
+
+            {Platform.OS === 'web' ? (
+              <input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                required
+                style={{
+                  backgroundColor: 'rgba(22, 27, 46, 0.8)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: 12,
+                  padding: '0 14px',
+                  height: 48,
+                  fontSize: 15,
+                  fontWeight: 500,
+                  color: '#FFFFFF',
+                  width: '100%',
+                  boxSizing: 'border-box',
+                  outline: 'none',
+                  fontFamily: 'inherit',
+                  colorScheme: 'dark'
+                }}
+              />
+            ) : (
+              <TextInput
+                style={styles.textInput}
+                value={date}
+                onChangeText={setDate}
+                placeholder="YYYY-MM-DD"
+                placeholderTextColor="rgba(255, 255, 255, 0.3)"
+              />
+            )}
           </View>
 
           {/* 4. Notes Input */}
