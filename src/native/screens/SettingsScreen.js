@@ -263,6 +263,9 @@ export default function SettingsScreen({
 
   return (
     <View style={styles.container}>
+      {/* Top Header Area - Preserving Top Spacing as Empty Space to match History */}
+      <View style={styles.topSpacer} />
+
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.content}
@@ -502,12 +505,14 @@ const styles = StyleSheet.create({
       backgroundImage: 'linear-gradient(135deg, #0C0F1A 0%, #1a1040 40%, #0C0F1A 100%)',
     }),
   },
+  topSpacer: {
+    height: 60,
+  },
   scrollView: {
     flex: 1,
   },
   content: {
     paddingHorizontal: 16,
-    paddingTop: 24,
     paddingBottom: 120,
   },
 
